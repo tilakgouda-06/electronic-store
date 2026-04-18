@@ -1,1503 +1,2143 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const COLORS = {
-  primary: "#E63946",
-  gold: "#F4A300",
-  dark: "#0A0A0A",
-  darker: "#060606",
-  cream: "#FAF7F2",
-  cardBg: "#111111",
-  cardBorder: "#222222",
-  text: "#F0EDE8",
-  muted: "#888888",
-  white: "#FFFFFF",
+// ─── THEME ────────────────────────────────────────────────────────────────────
+const C = {
+  dark:       "#05070F",
+  darkMid:    "#080C18",
+  darkCard:   "#0B0F1E",
+  darkBorder: "#141928",
+  cyan:       "#00C8F0",
+  blue:       "#0080EE",
+  purple:     "#6457FF",
+  pink:       "#FF3CAC",
+  white:      "#EEF4FF",
+  silver:     "#8A9BBD",
+  text:       "#E2ECFF",
+  muted:      "#4E5F7A",
+  gold:       "#FFB300",
+  green:      "#00D97A",
+  red:        "#F03060",
 };
 
+// ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { background: #0A0A0A; color: #F0EDE8; font-family: 'DM Sans', sans-serif; }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #111; }
-  ::-webkit-scrollbar-thumb { background: #E63946; border-radius: 3px; }
-  input, select, textarea { font-family: 'DM Sans', sans-serif; }
-  button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  body {
+    background: #05070F;
+    color: #E2ECFF;
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    width: 100%;
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #05070F; }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#0080EE,#6457FF); border-radius: 2px; }
+  input, select, textarea, button { font-family: 'DM Sans', sans-serif; }
   a { text-decoration: none; color: inherit; }
 
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
+  @keyframes fadeInUp    { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn      { from { opacity:0; } to { opacity:1; } }
+  @keyframes slideDown   { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse       { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+  @keyframes shimmer     { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
+  @keyframes cartBounce  { 0%{transform:scale(1);} 30%{transform:scale(1.3);} 60%{transform:scale(0.92);} 100%{transform:scale(1);} }
+  @keyframes successPop  { 0%{transform:scale(0.5);opacity:0;} 70%{transform:scale(1.08);} 100%{transform:scale(1);opacity:1;} }
+  @keyframes float       { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+  @keyframes glowPulse   { 0%,100%{box-shadow:0 0 16px rgba(0,128,238,0.3);} 50%{box-shadow:0 0 36px rgba(0,200,240,0.55),0 0 60px rgba(100,87,255,0.2);} }
+  @keyframes gradMove    { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+  @keyframes popupIn     { from{opacity:0;transform:translateX(100px) scale(0.85);} to{opacity:1;transform:translateX(0) scale(1);} }
+  @keyframes countUp     { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes megaSlide   { from{opacity:0;transform:translateY(-6px);} to{opacity:1;transform:translateY(0);} }
+
+  .page-enter { animation: fadeInUp 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: linear-gradient(135deg,#0080EE,#00C8F0);
+    background-size: 200% 200%;
+    color:#fff; border:none; padding:10px 22px; border-radius:10px;
+    font-weight:600; font-size:14px; cursor:pointer;
+    transition:all 0.25s ease; position:relative; overflow:hidden;
+    box-shadow:0 3px 12px rgba(0,128,238,0.28);
   }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,128,238,0.45); }
+
+  .btn-secondary {
+    background:transparent; color:#8A9BBD; border:1px solid #1C2740;
+    padding:10px 22px; border-radius:10px; font-weight:500; font-size:14px;
+    cursor:pointer; transition:all 0.25s ease;
   }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  @keyframes shimmer {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-  @keyframes cartBounce {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.3); }
-    60% { transform: scale(0.9); }
-    100% { transform: scale(1); }
-  }
-  @keyframes successPop {
-    0% { transform: scale(0.5); opacity: 0; }
-    70% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
-  }
-  @keyframes ripple {
-    0% { transform: scale(0); opacity: 0.6; }
-    100% { transform: scale(4); opacity: 0; }
+  .btn-secondary:hover { border-color:#00C8F0; color:#00C8F0; background:rgba(0,200,240,0.07); }
+
+  /* ── SKELETON ── */
+  .skeleton {
+    background:linear-gradient(90deg,#0B0F1E 25%,#131828 50%,#0B0F1E 75%);
+    background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px;
   }
 
-  .page-enter { animation: fadeIn 0.3s ease forwards; }
-  .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-  .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(230,57,70,0.2); }
-  .btn-primary {
-    background: linear-gradient(135deg, #E63946, #F4A300);
-    background-size: 200% 200%;
-    color: #fff; border: none; padding: 10px 22px; border-radius: 8px;
-    font-weight: 600; font-size: 14px; transition: all 0.2s ease;
-    position: relative; overflow: hidden;
-  }
-  .btn-primary:hover { background-position: right center; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(230,57,70,0.4); }
-  .btn-secondary {
-    background: transparent; color: #F0EDE8; border: 1px solid #333;
-    padding: 10px 22px; border-radius: 8px; font-weight: 500; font-size: 14px;
-    transition: all 0.2s ease;
-  }
-  .btn-secondary:hover { border-color: #E63946; color: #E63946; }
-  .skeleton {
-    background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 6px;
-  }
+  /* ── NAV ── */
   .nav-link {
-    color: #aaa; font-size: 14px; font-weight: 500; padding: 6px 12px;
-    border-radius: 6px; transition: all 0.2s ease; cursor: pointer;
+    color:#8A9BBD; font-size:14px; font-weight:500; padding:6px 0;
+    border-radius:0; transition:all 0.2s; cursor:pointer; position:relative;
+    white-space:nowrap; background:none;
   }
-  .nav-link:hover, .nav-link.active { color: #F0EDE8; background: #1a1a1a; }
-  .star-filled { color: #F4A300; }
-  .star-empty { color: #333; }
+  .nav-link::after {
+    content:''; position:absolute; bottom:-2px; left:0; right:0; height:2px;
+    background:linear-gradient(90deg,#00C8F0,#6457FF); border-radius:2px;
+    transform:scaleX(0); transition:transform 0.25s ease;
+  }
+  .nav-link:hover, .nav-link.active { color:#E2ECFF; }
+  .nav-link:hover::after, .nav-link.active::after { transform:scaleX(1); }
+
+  /* ── RESPONSIVE GRID ── */
+  @media(max-width:768px) {
+    .grid-mobile-1 { grid-template-columns:1fr !important; }
+  }
+
+  /* ── MEGA MENU ── */
+  .mega-menu {
+    position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%);
+    background:#07091A; border:1px solid rgba(0,128,238,0.18);
+    border-radius:18px; padding:24px; width:700px; max-width:calc(100vw - 32px);
+    z-index:1200; box-shadow:0 20px 60px rgba(0,0,0,0.65), 0 0 30px rgba(0,128,238,0.07);
+    animation:megaSlide 0.2s cubic-bezier(0.22,1,0.36,1);
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;
+  }
+  .mega-menu-title {
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px;
+    color:#4E5F7A; margin-bottom:10px; padding-bottom:8px;
+    border-bottom:1px solid #141928;
+  }
+  .mega-item {
+    display:flex; align-items:center; gap:8px; padding:8px 10px;
+    border-radius:9px; cursor:pointer; transition:all 0.15s;
+    font-size:13px; color:#8A9BBD; font-weight:500;
+  }
+  .mega-item:hover { background:rgba(0,128,238,0.1); color:#00C8F0; }
+
+  /* ── CARDS ── */
+  .card-product {
+    background:#0B0F1E; border:1px solid #141928; border-radius:16px;
+    overflow:hidden; transition:all 0.3s cubic-bezier(0.22,1,0.36,1);
+    display:flex; flex-direction:column; height:100%;
+    box-shadow:0 4px 16px rgba(0,0,0,0.25);
+  }
+  .card-product:hover {
+    border-color:rgba(0,200,240,0.35);
+    transform:translateY(-5px);
+    box-shadow:0 10px 25px rgba(0,0,0,0.3), 0 0 30px rgba(0,128,238,0.1);
+  }
+  .card-img-wrap {
+    position:relative; overflow:hidden; background:#060A16;
+    height:200px; flex-shrink:0;
+  }
+  .card-img-wrap img {
+    width:100%; height:100%; object-fit:contain; display:block; padding:8px;
+    transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  }
+  .card-product:hover .card-img-wrap img { transform:scale(1.06); }
+  .card-body {
+    padding:14px 16px 16px; display:flex; flex-direction:column; flex:1;
+  }
+  .card-footer { margin-top:auto; padding-top:12px; }
+
+  /* ── BADGES ── */
   .badge {
-    display: inline-block; padding: 3px 8px; border-radius: 4px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    display:inline-block; padding:3px 8px; border-radius:6px;
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px;
   }
-  .badge-red { background: rgba(230,57,70,0.15); color: #E63946; }
-  .badge-green { background: rgba(34,197,94,0.15); color: #22c55e; }
-  .badge-gold { background: rgba(244,163,0,0.15); color: #F4A300; }
-  .price-tag { font-family: 'Rajdhani', sans-serif; font-weight: 700; }
+  .badge-blue   { background:rgba(0,128,238,0.14); color:#00C8F0; border:1px solid rgba(0,128,238,0.25); }
+  .badge-green  { background:rgba(0,217,122,0.1);  color:#00D97A; border:1px solid rgba(0,217,122,0.2); }
+  .badge-red    { background:rgba(240,48,96,0.1);   color:#F03060; border:1px solid rgba(240,48,96,0.2); }
+  .badge-gold   { background:rgba(255,179,0,0.1);   color:#FFB300; border:1px solid rgba(255,179,0,0.2); }
+  .badge-purple { background:rgba(100,87,255,0.12); color:#9B94FF; border:1px solid rgba(100,87,255,0.25); }
+
+  /* ── TYPOGRAPHY ── */
   .gradient-text {
-    background: linear-gradient(135deg, #E63946, #F4A300);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    background: linear-gradient(135deg,#00C8F0,#0080EE,#6457FF);
+    background-size:200% 200%; animation:gradMove 4s ease infinite;
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  }
+  .gradient-text-warm {
+    background:linear-gradient(135deg,#FF3CAC,#FF6B35,#FFB300);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   }
   .section-title {
-    font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
+    font-family:'Syne',sans-serif; font-size:28px; font-weight:800; letter-spacing:-0.4px;
   }
-  .scrolltop {
-    position: fixed; bottom: 24px; right: 24px; z-index: 999;
-    width: 44px; height: 44px; background: linear-gradient(135deg,#E63946,#F4A300);
-    border: none; border-radius: 50%; color: #fff; font-size: 20px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 16px rgba(230,57,70,0.4); transition: transform 0.2s ease;
+  .price-tag { font-family:'Syne',sans-serif; font-weight:700; }
+  .star-filled { color:#FFB300; }
+  .star-empty  { color:#1E2D45; }
+
+  /* ── LAYOUT ── */
+  .section-wrap {
+    width:100%;
+    max-width:100%;
+    padding-left:clamp(16px,3.5vw,56px);
+    padding-right:clamp(16px,3.5vw,56px);
   }
-  .scrolltop:hover { transform: translateY(-3px); }
-  .input-field {
-    background: #1a1a1a; border: 1px solid #2a2a2a; color: #F0EDE8;
-    padding: 10px 14px; border-radius: 8px; font-size: 14px; width: 100%;
-    transition: border-color 0.2s ease; outline: none;
+
+  /* ── PRODUCT GRID ── */
+  .product-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(260px,1fr));
+    gap:24px;
+    align-items:stretch;
+    width:100%;
   }
-  .input-field:focus { border-color: #E63946; }
-  .input-field::placeholder { color: #555; }
-  .card-product {
-    background: #111; border: 1px solid #222; border-radius: 12px;
-    overflow: hidden; transition: all 0.2s ease; position: relative;
+  @media(min-width:1280px) { .product-grid { grid-template-columns:repeat(4,1fr); } }
+  @media(min-width:1600px) { .product-grid { grid-template-columns:repeat(5,1fr); } }
+  @media(max-width:1024px) { .product-grid { grid-template-columns:repeat(3,1fr); gap:18px; } }
+  @media(max-width:768px)  {
+    .product-grid { grid-template-columns:repeat(2,1fr); gap:14px; }
+    .hide-mobile  { display:none !important; }
+    .section-wrap { padding-left:14px; padding-right:14px; }
   }
-  .card-product:hover { border-color: #333; transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
-  .overlay-login {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
-    display: flex; align-items: center; justify-content: center;
-    animation: fadeIn 0.2s ease;
+  @media(max-width:480px)  { .product-grid { grid-template-columns:1fr; } }
+  @media(min-width:769px)  { .hide-desktop { display:none !important; } }
+
+  /* ── INPUTS ── */
+  .input-premium {
+    background:rgba(8,12,24,0.95); border:1.5px solid #1A2440;
+    color:#E2ECFF; padding:10px 14px 10px 40px; border-radius:10px;
+    font-size:14px; width:100%; transition:all 0.25s; outline:none;
   }
-  .popup {
-    position: fixed; top: 80px; right: 24px; z-index: 3000;
-    background: #1a1a1a; border: 1px solid #333; border-radius: 12px;
-    padding: 16px 22px; min-width: 240px;
-    animation: slideDown 0.3s ease;
-    display: flex; align-items: center; gap: 12px;
+  .input-premium:focus { border-color:#0080EE; background:rgba(0,128,238,0.05); box-shadow:0 0 0 3px rgba(0,128,238,0.1); }
+  .input-premium::placeholder { color:#2E3E58; }
+
+  /* ── GLASS ── */
+  .glass-card {
+    background:rgba(11,15,30,0.8); backdrop-filter:blur(18px);
+    border:1px solid rgba(20,25,40,0.95); border-radius:15px;
   }
+
+  /* ── POPUP ── */
+  .popup-glass {
+    position:fixed; top:82px; right:22px; z-index:9999;
+    background:rgba(8,10,22,0.95); backdrop-filter:blur(24px);
+    border:1px solid rgba(0,128,238,0.3); border-radius:16px;
+    padding:14px 20px; min-width:240px; max-width:320px;
+    box-shadow:0 8px 36px rgba(0,0,0,0.55), 0 0 20px rgba(0,128,238,0.12);
+    animation:popupIn 0.35s cubic-bezier(0.22,1,0.36,1);
+    display:flex; align-items:center; gap:12px;
+  }
+
+  /* ── HERO ── */
+  .hero-bg {
+    background:linear-gradient(135deg,#05070F 0%,#080C18 40%,#070B1E 70%,#05070F 100%);
+    position:relative; overflow:hidden; width:100%;
+  }
+  .hero-bg::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse at 12% 50%, rgba(0,128,238,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 25%, rgba(100,87,255,0.09) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(0,200,240,0.05) 0%, transparent 40%);
+  }
+
+  /* ── FLASH DEALS SECTION ── */
+  .deals-bg {
+    background:linear-gradient(135deg,#0A060E,#10060E,#0A060F);
+    border-top:1px solid rgba(240,48,96,0.12);
+    border-bottom:1px solid rgba(240,48,96,0.12);
+  }
+
+  /* ── CATEGORY GRID ── */
+  .cat-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(110px,1fr));
+    gap:12px;
+  }
+  @media(min-width:768px) { .cat-grid { grid-template-columns:repeat(8,1fr); } }
+  @media(max-width:480px) { .cat-grid { grid-template-columns:repeat(4,1fr); } }
+
+  /* ── CHAT ── */
   .chat-window {
-    position: fixed; bottom: 80px; right: 24px; z-index: 1500;
-    width: 340px; background: #111; border: 1px solid #222;
-    border-radius: 16px; overflow: hidden;
-    animation: slideDown 0.3s ease;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    position:fixed; bottom:86px; right:22px; z-index:1500;
+    width:330px; background:#060A18; border:1px solid rgba(0,128,238,0.22);
+    border-radius:18px; overflow:hidden;
+    animation:slideDown 0.28s cubic-bezier(0.22,1,0.36,1);
+    box-shadow:0 20px 70px rgba(0,0,0,0.65), 0 0 40px rgba(0,128,238,0.1);
   }
-  .chat-bubble-bot {
-    background: #1a1a1a; border-radius: 14px 14px 14px 4px;
-    padding: 10px 14px; max-width: 80%; font-size: 13px; color: #ddd;
+  @media(max-width:480px) { .chat-window { width:calc(100vw - 28px); right:14px; } }
+  .chat-bot-bubble { background:#0D1427; border:1px solid #18243E; border-radius:12px 12px 12px 3px; padding:9px 13px; max-width:80%; font-size:13px; color:#A8BCDA; line-height:1.5; }
+  .chat-user-bubble { background:linear-gradient(135deg,#0080EE,#6457FF); border-radius:12px 12px 3px 12px; padding:9px 13px; max-width:80%; font-size:13px; color:#fff; margin-left:auto; line-height:1.5; }
+
+  /* ── SEARCH OVERLAY ── */
+  .search-overlay { position:fixed; inset:0; background:rgba(5,7,15,0.88); backdrop-filter:blur(14px); z-index:2000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.2s ease; }
+  .search-box { width:min(620px,90vw); animation:fadeInUp 0.28s cubic-bezier(0.22,1,0.36,1); }
+  .search-input { width:100%; background:rgba(11,15,30,0.97); border:2px solid rgba(0,200,240,0.38); color:#E2ECFF; padding:17px 20px 17px 54px; border-radius:14px; font-size:17px; outline:none; transition:all 0.25s; font-family:'DM Sans',sans-serif; }
+  .search-input:focus { border-color:rgba(0,200,240,0.65); box-shadow:0 0 28px rgba(0,200,240,0.15); }
+  .search-input::placeholder { color:#2E3E58; }
+
+  /* ── SCROLL TOP ── */
+  .scrolltop {
+    position:fixed; bottom:26px; right:26px; z-index:999;
+    width:44px; height:44px; background:linear-gradient(135deg,#0080EE,#6457FF);
+    border:none; border-radius:50%; color:#fff; font-size:17px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 18px rgba(0,128,238,0.45); cursor:pointer;
+    animation:glowPulse 2.2s ease-in-out infinite; transition:transform 0.2s;
   }
-  .chat-bubble-user {
-    background: linear-gradient(135deg,#E63946,#F4A300);
-    border-radius: 14px 14px 4px 14px;
-    padding: 10px 14px; max-width: 80%; font-size: 13px; color: #fff;
-    margin-left: auto;
+  .scrolltop:hover { transform:translateY(-3px) scale(1.07); }
+
+  /* ── FULL-WIDTH OVERRIDES ── */
+  body, #root { width:100%; max-width:100%; overflow-x:hidden; }
+  @media(max-width:640px) {
+    .nav-link { font-size:13px; }
   }
-  @media (max-width: 768px) {
-    .hide-mobile { display: none !important; }
-    .nav-categories { display: none; }
+
+  /* ── FAQ ── */
+  .faq-item { border-bottom:1px solid #141928; }
+
+  /* ── BRAND CARD ── */
+  .brand-card {
+    background:#0B0F1E; border:1px solid #141928; border-radius:14px;
+    padding:20px 14px; text-align:center; cursor:pointer; transition:all 0.28s ease;
   }
-  @media (max-width: 480px) {
-    .chat-window { width: calc(100vw - 32px); right: 16px; }
+  .brand-card:hover {
+    border-color:rgba(0,200,240,0.38); transform:translateY(-4px);
+    box-shadow:0 14px 40px rgba(0,0,0,0.35), 0 0 22px rgba(0,128,238,0.09);
   }
+
+  /* ── NEON BTN ── */
+  .neon-glow-btn {
+    position:relative; overflow:hidden;
+    background:linear-gradient(135deg,#0080EE,#00C8F0,#6457FF);
+    background-size:200% 200%; animation:gradMove 3s ease infinite;
+    border:none; border-radius:12px; color:#fff; font-weight:700;
+    cursor:pointer; transition:all 0.28s ease;
+    box-shadow:0 4px 20px rgba(0,128,238,0.35);
+  }
+  .neon-glow-btn:hover { transform:translateY(-2px) scale(1.015); box-shadow:0 12px 36px rgba(0,128,238,0.5); }
 `;
 
-// ─── DATA ────────────────────────────────────────────────────────────────────
+// ─── STATIC DATA ──────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { id: "mobiles", name: "Mobiles", icon: "📱", color: "#E63946" },
-  { id: "laptops", name: "Laptops", icon: "💻", color: "#F4A300" },
-  { id: "tablets", name: "Tablets", icon: "📟", color: "#7C3AED" },
-  { id: "tvs", name: "Smart TVs", icon: "📺", color: "#0EA5E9" },
-  { id: "accessories", name: "Accessories", icon: "🎧", color: "#10B981" },
-  { id: "cameras", name: "Cameras", icon: "📷", color: "#F59E0B" },
-  { id: "gaming", name: "Gaming", icon: "🎮", color: "#EF4444" },
-  { id: "audio", name: "Audio", icon: "🔊", color: "#8B5CF6" },
+  { id:"mobiles",     name:"Mobiles",      icon:"📱", color:"#00C8F0" },
+  { id:"laptops",     name:"Laptops",      icon:"💻", color:"#0080EE" },
+  { id:"tablets",     name:"Tablets",      icon:"📟", color:"#6457FF" },
+  { id:"headphones",  name:"Headphones",   icon:"🎧", color:"#00C8F0" },
+  { id:"speakers",    name:"Speakers",     icon:"🔊", color:"#00D97A" },
+  { id:"smartwatch",  name:"Smartwatches", icon:"⌚", color:"#FFB300" },
+  { id:"cameras",     name:"Cameras",      icon:"📷", color:"#FF6B35" },
+  { id:"accessories", name:"Accessories",  icon:"🔌", color:"#F03060" },
 ];
 
 const BRANDS = [
-  { id: "apple", name: "Apple", logo: "🍎", country: "USA" },
-  { id: "samsung", name: "Samsung", logo: "S", country: "South Korea" },
-  { id: "oneplus", name: "OnePlus", logo: "1+", country: "China" },
-  { id: "sony", name: "Sony", logo: "S.", country: "Japan" },
-  { id: "lg", name: "LG", logo: "LG", country: "South Korea" },
-  { id: "xiaomi", name: "Xiaomi", logo: "Mi", country: "China" },
-  { id: "dell", name: "Dell", logo: "D", country: "USA" },
-  { id: "hp", name: "HP", logo: "hp", country: "USA" },
-  { id: "lenovo", name: "Lenovo", logo: "Lv", country: "China" },
-  { id: "asus", name: "Asus", logo: "As", country: "Taiwan" },
-  { id: "bose", name: "Bose", logo: "Bo", country: "USA" },
-  { id: "jbl", name: "JBL", logo: "JBL", country: "USA" },
+  { id:"apple",       name:"Apple",      logo:"🍎", country:"USA",         color:"#636366" },
+  { id:"samsung",     name:"Samsung",    logo:"S",  country:"South Korea", color:"#1428A0" },
+  { id:"sony",        name:"Sony",       logo:"S.", country:"Japan",       color:"#003087" },
+  { id:"oneplus",     name:"OnePlus",    logo:"1+", country:"China",       color:"#EB0028" },
+  { id:"hp",          name:"HP",         logo:"hp", country:"USA",         color:"#0096D6" },
+  { id:"dell",        name:"Dell",       logo:"D",  country:"USA",         color:"#007DB8" },
+  { id:"lenovo",      name:"Lenovo",     logo:"Lv", country:"China",       color:"#E2231A" },
+  { id:"boat",        name:"boAt",       logo:"bO", country:"India",       color:"#E8001D" },
+  { id:"noise",       name:"Noise",      logo:"No", country:"India",       color:"#FF6B00" },
+  { id:"realme",      name:"Realme",     logo:"Re", country:"India",       color:"#FFCB00" },
+  { id:"redmi",       name:"Redmi",      logo:"Rd", country:"India",       color:"#FF6900" },
+  { id:"portronics",  name:"Portronics", logo:"Pt", country:"India",       color:"#0066CC" },
+  { id:"zebronics",   name:"Zebronics",  logo:"Zb", country:"India",       color:"#E31E24" },
+  { id:"lava",        name:"Lava",       logo:"Lv", country:"India",       color:"#FF2D20" },
+  { id:"jbl",         name:"JBL",        logo:"JL", country:"USA",         color:"#F37021" },
 ];
 
+const FAQ_DATA = [
+  { q:"How to place an order?", a:"Browse products, add them to cart, and proceed to checkout. Fill in your delivery details, choose payment method (UPI or COD), and confirm your order." },
+  { q:"What payment methods are accepted?", a:"We accept UPI payments (PhonePe, GPay, Paytm, BHIM) and Cash on Delivery (COD). Both options are secure." },
+  { q:"How long does delivery take?", a:"Standard delivery: 3–5 business days. Express delivery: 1–2 business days. Times may vary for remote locations." },
+  { q:"What is the return policy?", a:"We offer hassle-free 7-day returns from delivery date. Products must be unused, in original packaging with all accessories." },
+  { q:"How does the refund process work?", a:"Refunds are processed within 3–5 business days after we receive the returned product. COD refunds are via bank transfer; UPI refunds go to your UPI account." },
+  { q:"What are the warranty details?", a:"All products carry manufacturer warranty: 1-year for electronics, 6 months for accessories. Warranty covers manufacturing defects." },
+  { q:"How to contact customer support?", a:"Call 111 1234 5555 (Mon–Sat, 9AM–7PM), email electronicstore@gmail.com, or use the live chat for instant help." },
+  { q:"Can I cancel my order?", a:"Orders can be cancelled within 24 hours of placement for free. After 24 hours, a 5% processing fee applies if not yet shipped." },
+  { q:"How do I check product availability?", a:"Availability is shown in real-time. 'In Stock' means immediate dispatch; 'Low Stock' means limited units available." },
+  { q:"How to track my shipment?", a:"Once shipped, you'll receive an SMS with a tracking link. You can also track under 'My Orders' in the Profile section." },
+];
+
+// ─── CATEGORY-ACCURATE IMAGE MAP ──────────────────────────────────────────────
+// Each category gets visually accurate images. Product-specific mappings take priority.
+const IMG = {
+  // ── MOBILES ──
+  "iPhone 15 Pro Max":           "https://images.unsplash.com/photo-1695048132697-4af48b42fc58?w=600&q=80",
+  "iPhone 15":                   "https://images.unsplash.com/photo-1696446702183-079bc9c5d490?w=600&q=80",
+  "iPhone 14 Pro":               "https://images.unsplash.com/photo-1663499482523-1c0c1bae4ce1?w=600&q=80",
+  "iPhone 13":                   "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=600&q=80",
+  "iPhone SE 3rd Gen":           "https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=600&q=80",
+  "Samsung Galaxy S24 Ultra":    "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600&q=80",
+  "Samsung Galaxy S24+":         "https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?w=600&q=80",
+  "Samsung Galaxy S23 FE":       "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=600&q=80",
+  "Samsung Galaxy A55":          "https://images.unsplash.com/photo-1519558260268-cde7e03a0152?w=600&q=80",
+  "Samsung Galaxy M55":          "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&q=80",
+  "OnePlus 12":                  "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80",
+  "OnePlus 12R":                 "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&q=80",
+  "OnePlus Nord CE 4":           "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=600&q=80",
+  "Realme GT 5 Pro":             "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=600&q=80",
+  "Realme Narzo 70 Pro":         "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&q=80",
+  "Realme 12 Pro+":              "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=600&q=80",
+  "Redmi Note 13 Pro+":          "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80",
+  "Redmi Note 13 Pro":           "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=600&q=80",
+  "Redmi 13C":                   "https://images.unsplash.com/photo-1519558260268-cde7e03a0152?w=600&q=80",
+
+  // ── LAPTOPS ──
+  'MacBook Pro 16" M3 Max':      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80",
+  "MacBook Air M2":              "https://images.unsplash.com/photo-1611186871525-c9c1c3c8d44a?w=600&q=80",
+  "Dell XPS 15":                 "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&q=80",
+  "Dell Inspiron 15 3520":       "https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?w=600&q=80",
+  "HP Spectre x360 14":          "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80",
+  "HP Pavilion 15":              "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&q=80",
+  "Lenovo ThinkPad X1 Carbon":   "https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?w=600&q=80",
+  "Lenovo IdeaPad Slim 5":       "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80",
+  "Asus ROG Strix G16":          "https://images.unsplash.com/photo-1593642634524-b40b5baae6bb?w=600&q=80",
+  "Asus VivoBook 15":            "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&q=80",
+  "HP Victus 15 Gaming":         "https://images.unsplash.com/photo-1593642634524-b40b5baae6bb?w=600&q=80",
+  "Lenovo Legion 5i Pro":        "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&q=80",
+  "Dell Vostro 14 3420":         "https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?w=600&q=80",
+  "Asus ZenBook 14 OLED":        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80",
+  "HP EliteBook 840 G10":        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&q=80",
+
+  // ── TABLETS ──
+  'iPad Pro 13" M4':             "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&q=80",
+  "iPad Air M2":                 "https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=600&q=80",
+  "Samsung Galaxy Tab S9 Ultra": "https://images.unsplash.com/photo-1561154464-82e9adf32764?w=600&q=80",
+  "Samsung Galaxy Tab S9 FE":    "https://images.unsplash.com/photo-1587033411391-5d9e51cce126?w=600&q=80",
+  "Samsung Galaxy Tab A9+":      "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&q=80",
+  "Lenovo Tab P12 Pro":          "https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=600&q=80",
+  "Lenovo Tab M10 FHD Plus":     "https://images.unsplash.com/photo-1561154464-82e9adf32764?w=600&q=80",
+  "Redmi Pad Pro":               "https://images.unsplash.com/photo-1587033411391-5d9e51cce126?w=600&q=80",
+  "Realme Pad 2":                "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&q=80",
+  "Samsung Galaxy Tab S6 Lite":  "https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=600&q=80",
+
+  // ── HEADPHONES ──
+  "Sony WH-1000XM5":             "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
+  "Sony WF-1000XM5":             "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+  "Apple AirPods Pro 2nd Gen":   "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&q=80",
+  "Apple AirPods Max":           "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
+  "boAt Rockerz 550 Pro":        "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&q=80",
+  "boAt Airdopes 311 Pro":       "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+  "boAt Rockerz 255 Pro+":       "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&q=80",
+  "Noise Buds VS404":            "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+  "Noise Shots X5 Pro":          "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&q=80",
+  "Noise Cancellation Plus":     "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
+  "OnePlus Nord Buds 2":         "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+  "Realme Buds Air 5 Pro":       "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&q=80",
+  "Redmi Buds 5 Pro":            "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+  "Samsung Galaxy Buds2 Pro":    "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=600&q=80",
+  "JBL Tune 760NC":              "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&q=80",
+  "JBL Tune Beam":               "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+
+  // ── SPEAKERS ──
+  "JBL PartyBox 310":            "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
+  "JBL Charge 5":                "https://images.unsplash.com/photo-1589003077984-894e133dabab?w=600&q=80",
+  "JBL Flip 6":                  "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&q=80",
+  "Sony SRS-XB43":               "https://images.unsplash.com/photo-1589003077984-894e133dabab?w=600&q=80",
+  "Sony SRS-XE200":              "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
+  "boAt Stone 1000":             "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&q=80",
+  "boAt Aavante Bar 2000D":      "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
+  "Zebronics Zeb-County":        "https://images.unsplash.com/photo-1589003077984-894e133dabab?w=600&q=80",
+  "Zebronics Zeb-Action Pro":    "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&q=80",
+  "Samsung Sound Tower MX-T40":  "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
+
+  // ── SMARTWATCHES ──
+  "Apple Watch Ultra 2":            "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&q=80",
+  "Apple Watch Series 9":           "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80",
+  "Samsung Galaxy Watch 6 Classic": "https://images.unsplash.com/photo-1617043983671-a033fc0d24c5?w=600&q=80",
+  "Samsung Galaxy Watch 6":         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80",
+  "OnePlus Watch 2":                "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&q=80",
+  "Noise ColorFit Ultra 3":         "https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=600&q=80",
+  "Noise Icon 3":                   "https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?w=600&q=80",
+  "Realme Watch S2":                "https://images.unsplash.com/photo-1617043983671-a033fc0d24c5?w=600&q=80",
+  "Redmi Watch 4":                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80",
+  "Samsung Galaxy Fit3":            "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&q=80",
+
+  // ── CAMERAS ──
+  "Sony Alpha A7 IV":        "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80",
+  "Sony ZV-E10":             "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80",
+  "GoPro HERO12 Black":      "https://images.unsplash.com/photo-1564466809058-bf4114d55352?w=600&q=80",
+  "GoPro HERO11 Black":      "https://images.unsplash.com/photo-1564466809058-bf4114d55352?w=600&q=80",
+  "Canon EOS M50 Mark II":   "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80",
+  "Nikon Z30":               "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80",
+  "Canon PowerShot G7X III": "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80",
+  "Canon EOS 200D II":       "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80",
+  "Sony Cyber-shot W800":    "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&q=80",
+  "Samsung Galaxy Camera FE":"https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80",
+
+  // ── ACCESSORIES ──
+  "Anker 100W GaN Charger":            "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&q=80",
+  "Portronics Mport 3C Hub":           "https://images.unsplash.com/photo-1531492746076-161ca9bcad58?w=600&q=80",
+  "Zebronics Zeb-Zap Wireless Charger":"https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&q=80",
+  "boAt BassHeads 900":                "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&q=80",
+  "Portronics Charge Mate":            "https://images.unsplash.com/photo-1531492746076-161ca9bcad58?w=600&q=80",
+  "Zebronics ZEB-Shield Laptop Stand": "https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?w=600&q=80",
+  "Realme Power Bank 20000mAh":        "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&q=80",
+  "Noise Power 10000mAh":              "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&q=80",
+  "boAt Rugged V3 Cable":              "https://images.unsplash.com/photo-1531492746076-161ca9bcad58?w=600&q=80",
+  "Lava ProMouse Wireless":            "https://images.unsplash.com/photo-1531492746076-161ca9bcad58?w=600&q=80",
+};
+
+// Category fallback images — used when product name not found in IMG map
+const CAT_FALLBACK = {
+  mobiles:     "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80",
+  laptops:     "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80",
+  tablets:     "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&q=80",
+  headphones:  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80",
+  speakers:    "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&q=80",
+  smartwatch:  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80",
+  cameras:     "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80",
+  accessories: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&q=80",
+};
+
+function getImg(name, category) {
+  return IMG[name] || CAT_FALLBACK[category] || `https://placehold.co/600x600/0B0F1E/00C8F0?text=${encodeURIComponent(name)}`;
+}
+
+// ─── PRODUCT FACTORY ──────────────────────────────────────────────────────────
 function makeProducts() {
   const items = [];
+  const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // MOBILES
   const mobilesData = [
-    { name: "iPhone 15 Pro Max", brand: "Apple", price: 134900, rating: 4.8, specs: { ram: "8GB", storage: "256GB", processor: "A17 Pro", display: '6.7" OLED', battery: "4422mAh" }, image: "https://images.unsplash.com/photo-1696426026186-f3cc60c4e458?w=400&q=80" },
-    { name: "iPhone 15", brand: "Apple", price: 79900, rating: 4.6, specs: { ram: "6GB", storage: "128GB", processor: "A16 Bionic", display: '6.1" OLED', battery: "3279mAh" }, image: "https://images.unsplash.com/photo-1695048132697-4af48b42fc58?w=400&q=80" },
-    { name: "Samsung Galaxy S24 Ultra", brand: "Samsung", price: 129999, rating: 4.7, specs: { ram: "12GB", storage: "256GB", processor: "Snapdragon 8 Gen 3", display: '6.8" QHD+ AMOLED', battery: "5000mAh" }, image: "https://images.unsplash.com/photo-1706187896011-ee1a4a24b2e7?w=400&q=80" },
-    { name: "Samsung Galaxy S24+", brand: "Samsung", price: 99999, rating: 4.6, specs: { ram: "12GB", storage: "256GB", processor: "Snapdragon 8 Gen 3", display: '6.7" Dynamic AMOLED', battery: "4900mAh" }, image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400&q=80" },
-    { name: "OnePlus 12", brand: "OnePlus", price: 64999, rating: 4.5, specs: { ram: "12GB", storage: "256GB", processor: "Snapdragon 8 Gen 3", display: '6.82" LTPO AMOLED', battery: "5400mAh" }, image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&q=80" },
-    { name: "Xiaomi 14 Ultra", brand: "Xiaomi", price: 89999, rating: 4.5, specs: { ram: "16GB", storage: "512GB", processor: "Snapdragon 8 Gen 3", display: '6.73" LTPO AMOLED', battery: "5000mAh" }, image: "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=400&q=80" },
-    { name: "Google Pixel 8 Pro", brand: "Google", price: 106999, rating: 4.7, specs: { ram: "12GB", storage: "128GB", processor: "Google Tensor G3", display: '6.7" OLED', battery: "5050mAh" }, image: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400&q=80" },
-    { name: "OnePlus 11R", brand: "OnePlus", price: 39999, rating: 4.4, specs: { ram: "8GB", storage: "128GB", processor: "Snapdragon 8+ Gen 1", display: '6.74" AMOLED', battery: "5000mAh" }, image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&q=80" },
-    { name: "Samsung Galaxy A55", brand: "Samsung", price: 34999, rating: 4.3, specs: { ram: "8GB", storage: "128GB", processor: "Exynos 1480", display: '6.6" Super AMOLED', battery: "5000mAh" }, image: "https://images.unsplash.com/photo-1555744896-0ad01f7e9bce?w=400&q=80" },
-    { name: "Xiaomi Redmi Note 13 Pro+", brand: "Xiaomi", price: 31999, rating: 4.4, specs: { ram: "8GB", storage: "256GB", processor: "Dimensity 7200 Ultra", display: '6.67" AMOLED', battery: "5000mAh" }, image: "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=400&q=80" },
+    { name:"iPhone 15 Pro Max", brand:"Apple",   price:134900, rating:4.8, desc:"Titanium design, A17 Pro chip, 48MP ProRAW camera, ProRes video.", specs:{ ram:"8GB", storage:"256GB", processor:"A17 Pro", display:'6.7" OLED', battery:"4422mAh" } },
+    { name:"iPhone 15",          brand:"Apple",   price:79900,  rating:4.7, desc:"Dynamic Island, 48MP main camera, A16 Bionic chip, USB-C.", specs:{ ram:"6GB", storage:"128GB", processor:"A16 Bionic", display:'6.1" OLED', battery:"3877mAh" } },
+    { name:"iPhone 14 Pro",      brand:"Apple",   price:109900, rating:4.7, desc:"Always-On display, 48MP camera, Dynamic Island, A16 Bionic.", specs:{ ram:"6GB", storage:"128GB", processor:"A16 Bionic", display:'6.1" OLED', battery:"3200mAh" } },
+    { name:"iPhone 13",          brand:"Apple",   price:59900,  rating:4.6, desc:"Dual 12MP cameras, A15 Bionic chip, 5G ready, compact design.", specs:{ ram:"4GB", storage:"128GB", processor:"A15 Bionic", display:'6.1" OLED', battery:"3227mAh" } },
+    { name:"iPhone SE 3rd Gen",  brand:"Apple",   price:49900,  rating:4.4, desc:"Compact powerhouse with A15 Bionic chip, 5G, Touch ID.", specs:{ ram:"4GB", storage:"64GB", processor:"A15 Bionic", display:'4.7" Retina', battery:"2018mAh" } },
+    { name:"Samsung Galaxy S24 Ultra", brand:"Samsung", price:129999, rating:4.7, desc:"Titanium-framed Galaxy AI powerhouse with built-in S Pen.", specs:{ ram:"12GB", storage:"256GB", processor:"Snapdragon 8 Gen 3", display:'6.8" QHD+ AMOLED', battery:"5000mAh" } },
+    { name:"Samsung Galaxy S24+", brand:"Samsung", price:99999, rating:4.6, desc:"Galaxy AI features, Snapdragon 8 Gen 3, 50MP camera.", specs:{ ram:"12GB", storage:"256GB", processor:"Snapdragon 8 Gen 3", display:'6.7" Dynamic AMOLED 2X', battery:"4900mAh" } },
+    { name:"Samsung Galaxy S23 FE", brand:"Samsung", price:54999, rating:4.4, desc:"Fan Edition with 50MP camera, Snapdragon 8 Gen 1, IP68.", specs:{ ram:"8GB", storage:"128GB", processor:"Snapdragon 8 Gen 1", display:'6.4" Dynamic AMOLED 2X', battery:"4500mAh" } },
+    { name:"Samsung Galaxy A55",  brand:"Samsung", price:38999, rating:4.3, desc:"50MP OIS camera, 5000mAh battery, IP67, Galaxy AI features.", specs:{ ram:"8GB", storage:"128GB", processor:"Exynos 1480", display:'6.6" Super AMOLED', battery:"5000mAh" } },
+    { name:"Samsung Galaxy M55",  brand:"Samsung", price:29999, rating:4.2, desc:"200MP camera, 5000mAh with 45W fast charge, 5G ready.", specs:{ ram:"8GB", storage:"128GB", processor:"Snapdragon 7 Gen 1", display:'6.7" sAMOLED+', battery:"5000mAh" } },
+    { name:"OnePlus 12",          brand:"OnePlus", price:64999, rating:4.5, desc:"Hasselblad triple camera, 100W SuperVOOC, Snapdragon 8 Gen 3.", specs:{ ram:"12GB", storage:"256GB", processor:"Snapdragon 8 Gen 3", display:'6.82" LTPO AMOLED', battery:"5400mAh" } },
+    { name:"OnePlus 12R",         brand:"OnePlus", price:39999, rating:4.4, desc:"50MP Sony camera, 100W SUPERVOOC, 5500mAh battery.", specs:{ ram:"8GB", storage:"128GB", processor:"Snapdragon 8 Gen 1", display:'6.78" AMOLED 120Hz', battery:"5500mAh" } },
+    { name:"OnePlus Nord CE 4",   brand:"OnePlus", price:24999, rating:4.3, desc:"Snapdragon 7s Gen 3, 100W charging, 50MP Sony camera.", specs:{ ram:"8GB", storage:"128GB", processor:"Snapdragon 7s Gen 3", display:'6.7" AMOLED 120Hz', battery:"5500mAh" } },
+    { name:"Realme GT 5 Pro",     brand:"Realme",  price:37999, rating:4.4, desc:"Flagship killer with 144Hz AMOLED display and 240W fast charging.", specs:{ ram:"12GB", storage:"256GB", processor:"Snapdragon 8 Gen 3", display:'6.78" AMOLED 144Hz', battery:"5400mAh" } },
+    { name:"Realme Narzo 70 Pro", brand:"Realme",  price:22999, rating:4.2, desc:"MediaTek Dimensity 7050, 50MP Sony camera, 67W charging.", specs:{ ram:"8GB", storage:"128GB", processor:"Dimensity 7050", display:'6.67" Super AMOLED', battery:"5000mAh" } },
+    { name:"Realme 12 Pro+",      brand:"Realme",  price:29999, rating:4.3, desc:"Periscope 64MP camera, Snapdragon 7s Gen 2, 67W charging.", specs:{ ram:"8GB", storage:"256GB", processor:"Snapdragon 7s Gen 2", display:'6.7" AMOLED 120Hz', battery:"5000mAh" } },
+    { name:"Redmi Note 13 Pro+",  brand:"Redmi",   price:31999, rating:4.4, desc:"200MP camera, curved OLED display, 120W HyperCharge.", specs:{ ram:"8GB", storage:"256GB", processor:"Dimensity 7200 Ultra", display:'6.67" AMOLED 120Hz', battery:"5000mAh" } },
+    { name:"Redmi Note 13 Pro",   brand:"Redmi",   price:26999, rating:4.3, desc:"200MP camera, Snapdragon 7s Gen 2, AMOLED 120Hz display.", specs:{ ram:"8GB", storage:"256GB", processor:"Snapdragon 7s Gen 2", display:'6.67" AMOLED 120Hz', battery:"5100mAh" } },
+    { name:"Redmi 13C",           brand:"Redmi",   price:10999, rating:4.1, desc:"50MP AI triple camera, 5000mAh battery, 90Hz FHD+ display.", specs:{ ram:"4GB", storage:"128GB", processor:"Helio G85", display:'6.74" FHD+ IPS', battery:"5000mAh" } },
   ];
-  mobilesData.forEach((p, i) => {
-    items.push({ id: `mob_${i}`, ...p, category: "mobiles", stock: Math.floor(Math.random() * 50) + 1, reviews: Math.floor(Math.random() * 1000) + 100, discount: Math.floor(Math.random() * 20) + 5 });
-  });
+  mobilesData.forEach((p,i) => items.push({ id:`mob_${i}`, ...p, image:getImg(p.name,"mobiles"), category:"mobiles", stock:rnd(3,50), reviews:rnd(200,2000), discount:rnd(5,18) }));
 
+  // LAPTOPS
   const laptopsData = [
-    { name: 'MacBook Pro 16" M3 Max', brand: "Apple", price: 349900, rating: 4.9, specs: { ram: "36GB", storage: "1TB SSD", processor: "Apple M3 Max", display: '16.2" Liquid Retina XDR', battery: "22hr" }, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80" },
-    { name: 'MacBook Air 15" M3', brand: "Apple", price: 134900, rating: 4.8, specs: { ram: "8GB", storage: "256GB SSD", processor: "Apple M3", display: '15.3" Liquid Retina', battery: "18hr" }, image: "https://images.unsplash.com/photo-1611186871525-12af756c19f7?w=400&q=80" },
-    { name: "Dell XPS 15", brand: "Dell", price: 169900, rating: 4.7, specs: { ram: "32GB", storage: "1TB SSD", processor: "Intel Core i9-13900H", display: '15.6" OLED 3.5K', battery: "13hr" }, image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&q=80" },
-    { name: "HP Spectre x360 14", brand: "HP", price: 154900, rating: 4.6, specs: { ram: "16GB", storage: "512GB SSD", processor: "Intel Core i7-1355U", display: '14" 2.8K OLED Touch', battery: "17hr" }, image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80" },
-    { name: "Lenovo ThinkPad X1 Carbon", brand: "Lenovo", price: 144900, rating: 4.7, specs: { ram: "16GB", storage: "512GB SSD", processor: "Intel Core i7-1365U", display: '14" IPS 2.8K', battery: "15hr" }, image: "https://images.unsplash.com/photo-1588702547923-7093a6c3ba33?w=400&q=80" },
-    { name: "Asus ROG Strix G16", brand: "Asus", price: 139900, rating: 4.5, specs: { ram: "16GB DDR5", storage: "1TB SSD", processor: "Intel Core i9-13980HX", display: '16" 240Hz QHD', battery: "9hr" }, image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=400&q=80" },
-    { name: "Samsung Galaxy Book4 Pro", brand: "Samsung", price: 124990, rating: 4.5, specs: { ram: "16GB", storage: "512GB SSD", processor: "Intel Core Ultra 7", display: '14" Dynamic AMOLED 2X', battery: "22hr" }, image: "https://images.unsplash.com/photo-1542393545-10f5cde2c810?w=400&q=80" },
-    { name: "Dell Inspiron 15 3000", brand: "Dell", price: 54990, rating: 4.2, specs: { ram: "8GB", storage: "512GB SSD", processor: "Intel Core i5-1235U", display: '15.6" FHD Anti-Glare', battery: "7hr" }, image: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400&q=80" },
-    { name: "HP Pavilion 15", brand: "HP", price: 62990, rating: 4.3, specs: { ram: "8GB", storage: "512GB SSD", processor: "AMD Ryzen 5 7530U", display: '15.6" FHD IPS', battery: "8hr" }, image: "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=400&q=80" },
-    { name: "Lenovo IdeaPad Slim 5", brand: "Lenovo", price: 58990, rating: 4.3, specs: { ram: "16GB", storage: "512GB SSD", processor: "AMD Ryzen 7 7730U", display: '14" 2.8K OLED', battery: "12hr" }, image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&q=80" },
+    { name:'MacBook Pro 16" M3 Max', brand:"Apple",  price:349900, rating:4.9, desc:"Professional laptop with 22hr battery, Liquid Retina XDR display.", specs:{ ram:"36GB", storage:"1TB SSD", processor:"Apple M3 Max", display:'16.2" Liquid Retina XDR', battery:"22hr" } },
+    { name:"MacBook Air M2",    brand:"Apple",  price:114900, rating:4.8, desc:"Ultra-thin, fanless design with M2 chip, MagSafe charging.", specs:{ ram:"8GB", storage:"256GB SSD", processor:"Apple M2", display:'13.6" Liquid Retina', battery:"18hr" } },
+    { name:"Dell XPS 15",       brand:"Dell",   price:169900, rating:4.7, desc:"Thin bezel OLED masterpiece with Core i9 and RTX 4070.", specs:{ ram:"32GB", storage:"1TB SSD", processor:"Intel Core i9", display:'15.6" OLED 3.5K', battery:"13hr" } },
+    { name:"Dell Inspiron 15 3520", brand:"Dell", price:54999, rating:4.3, desc:"Intel Core i5-1235U, reliable everyday laptop.", specs:{ ram:"8GB", storage:"512GB SSD", processor:"Intel Core i5-1235U", display:'15.6" FHD IPS', battery:"8hr" } },
+    { name:"HP Spectre x360 14", brand:"HP",    price:154900, rating:4.6, desc:"360° convertible with OLED touch display and Intel Evo.", specs:{ ram:"16GB", storage:"512GB SSD", processor:"Intel Core i7", display:'14" 2.8K OLED Touch', battery:"17hr" } },
+    { name:"HP Pavilion 15",    brand:"HP",     price:62999,  rating:4.2, desc:"Ryzen 7 7730U, 512GB SSD, micro-edge display.", specs:{ ram:"16GB", storage:"512GB SSD", processor:"AMD Ryzen 7 7730U", display:'15.6" FHD IPS', battery:"9hr" } },
+    { name:"Lenovo ThinkPad X1 Carbon", brand:"Lenovo", price:144900, rating:4.7, desc:"Ultra-light business powerhouse with MIL-SPEC durability.", specs:{ ram:"16GB", storage:"512GB SSD", processor:"Intel Core i7", display:'14" IPS 2.8K', battery:"15hr" } },
+    { name:"Lenovo IdeaPad Slim 5", brand:"Lenovo", price:54999, rating:4.4, desc:"AMD Ryzen 7, 16GB RAM, 512GB SSD, thin & light.", specs:{ ram:"16GB", storage:"512GB SSD", processor:"AMD Ryzen 7", display:'14" FHD IPS', battery:"10hr" } },
+    { name:"Asus ROG Strix G16", brand:"Asus",  price:139900, rating:4.5, desc:"240Hz QHD display, Core i9 + RTX 4080 gaming beast.", specs:{ ram:"16GB DDR5", storage:"1TB SSD", processor:"Intel Core i9", display:'16" 240Hz QHD', battery:"9hr" } },
+    { name:"Asus VivoBook 15",  brand:"Asus",   price:48999,  rating:4.2, desc:"Intel Core i5, 8GB RAM, NanoEdge 15.6\" FHD display.", specs:{ ram:"8GB", storage:"512GB SSD", processor:"Intel Core i5", display:'15.6" FHD IPS', battery:"8hr" } },
+    { name:"HP Victus 15 Gaming", brand:"HP",   price:74999,  rating:4.3, desc:"Intel Core i5-12500H + RTX 3050, 144Hz FHD gaming laptop.", specs:{ ram:"8GB DDR4", storage:"512GB SSD", processor:"Intel Core i5", display:'15.6" FHD 144Hz', battery:"7hr" } },
+    { name:"Lenovo Legion 5i Pro", brand:"Lenovo", price:119999, rating:4.5, desc:"Intel Core i7 + RTX 4060, 2560×1600 165Hz display.", specs:{ ram:"16GB DDR5", storage:"512GB SSD", processor:"Intel Core i7", display:'16" WQXGA 165Hz', battery:"8hr" } },
+    { name:"Dell Vostro 14 3420", brand:"Dell", price:47999,  rating:4.1, desc:"Business laptop with Intel i5-1235U, ideal for professionals.", specs:{ ram:"8GB", storage:"512GB SSD", processor:"Intel Core i5", display:'14" FHD IPS', battery:"9hr" } },
+    { name:"Asus ZenBook 14 OLED", brand:"Asus", price:84999, rating:4.5, desc:"Ryzen 9 + 2.8K OLED display, ultra-thin premium design.", specs:{ ram:"16GB", storage:"1TB SSD", processor:"AMD Ryzen 9", display:'14" 2.8K OLED 90Hz', battery:"10hr" } },
+    { name:"HP EliteBook 840 G10", brand:"HP",  price:134999, rating:4.6, desc:"Enterprise security, Intel Core i7 vPro, WUXGA IPS.", specs:{ ram:"16GB", storage:"512GB SSD", processor:"Intel Core i7 vPro", display:'14" WUXGA IPS', battery:"14hr" } },
   ];
-  laptopsData.forEach((p, i) => {
-    items.push({ id: `lap_${i}`, ...p, category: "laptops", stock: Math.floor(Math.random() * 30) + 1, reviews: Math.floor(Math.random() * 800) + 50, discount: Math.floor(Math.random() * 15) + 3 });
-  });
+  laptopsData.forEach((p,i) => items.push({ id:`lap_${i}`, ...p, image:getImg(p.name,"laptops"), category:"laptops", stock:rnd(2,25), reviews:rnd(50,800), discount:rnd(3,12) }));
 
-  const tvData = [
-    { name: 'Samsung 65" Neo QLED 8K', brand: "Samsung", price: 299900, rating: 4.8, specs: { resolution: "8K (7680×4320)", panel: "Mini LED QLED", refresh: "120Hz", smart: "Tizen OS", hdr: "HDR10+" }, image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400&q=80" },
-    { name: 'LG 55" OLED C3', brand: "LG", price: 139900, rating: 4.9, specs: { resolution: "4K (3840×2160)", panel: "OLED evo", refresh: "120Hz", smart: "webOS 23", hdr: "Dolby Vision IQ" }, image: "https://images.unsplash.com/photo-1567690187548-f07b1d7bf5a9?w=400&q=80" },
-    { name: 'Sony 65" Bravia XR A95L', brand: "Sony", price: 319900, rating: 4.8, specs: { resolution: "4K", panel: "QD-OLED", refresh: "120Hz", smart: "Google TV", hdr: "Dolby Vision" }, image: "https://images.unsplash.com/photo-1461151304267-38535e780c79?w=400&q=80" },
-    { name: 'Samsung 43" Crystal UHD', brand: "Samsung", price: 38990, rating: 4.3, specs: { resolution: "4K", panel: "Crystal UHD", refresh: "60Hz", smart: "Tizen", hdr: "HDR10+" }, image: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400&q=80" },
-    { name: 'OnePlus 55" Q2 Pro', brand: "OnePlus", price: 64999, rating: 4.4, specs: { resolution: "4K", panel: "QLED", refresh: "144Hz", smart: "OxygenOS", hdr: "Dolby Vision" }, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" },
-    { name: 'Xiaomi 50" X Series', brand: "Xiaomi", price: 42999, rating: 4.3, specs: { resolution: "4K", panel: "IPS LCD", refresh: "60Hz", smart: "Android TV 11", hdr: "Dolby Vision" }, image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&q=80" },
+  // TABLETS
+  const tabletsData = [
+    { name:'iPad Pro 13" M4',          brand:"Apple",   price:109900, rating:4.9, desc:"Ultra-thin OLED display with Apple M4 chip, Apple Pencil Pro support.", specs:{ ram:"8GB", storage:"256GB", processor:"Apple M4", display:'13" Ultra Retina XDR OLED', battery:"10hr" } },
+    { name:"iPad Air M2",              brand:"Apple",   price:59900,  rating:4.7, desc:"M2 chip, 11\" Liquid Retina display, USB-C, 5G option.", specs:{ ram:"8GB", storage:"128GB", processor:"Apple M2", display:'11" Liquid Retina', battery:"10hr" } },
+    { name:"Samsung Galaxy Tab S9 Ultra", brand:"Samsung", price:109999, rating:4.7, desc:"14.6\" Dynamic AMOLED 2X display, S-Pen included, IP68.", specs:{ ram:"12GB", storage:"256GB", processor:"Snapdragon 8 Gen 2", display:'14.6" Dynamic AMOLED 2X', battery:"11200mAh" } },
+    { name:"Samsung Galaxy Tab S9 FE", brand:"Samsung", price:44999, rating:4.4, desc:"10.9\" TFT LCD, Exynos 1380, S Pen included, IP68.", specs:{ ram:"6GB", storage:"128GB", processor:"Exynos 1380", display:'10.9" TFT LCD 90Hz', battery:"8000mAh" } },
+    { name:"Samsung Galaxy Tab A9+",   brand:"Samsung", price:29999, rating:4.3, desc:"Slim 11\" display tablet with Dolby Atmos speakers.", specs:{ ram:"8GB", storage:"128GB", processor:"Snapdragon 695", display:'11" TFT LCD', battery:"7040mAh" } },
+    { name:"Lenovo Tab P12 Pro",       brand:"Lenovo",  price:59999, rating:4.5, desc:"12.6\" AMOLED display, Snapdragon 870, 8600mAh battery.", specs:{ ram:"8GB", storage:"256GB", processor:"Snapdragon 870", display:'12.6" AMOLED 2K', battery:"8600mAh" } },
+    { name:"Lenovo Tab M10 FHD Plus",  brand:"Lenovo",  price:16999, rating:4.1, desc:"10.6\" FHD display with Helio G80 and clean Android 12.", specs:{ ram:"4GB", storage:"128GB", processor:"Helio G80", display:'10.6" FHD IPS', battery:"7700mAh" } },
+    { name:"Redmi Pad Pro",            brand:"Redmi",   price:24999, rating:4.4, desc:"12.1\" IPS LCD, Snapdragon 7s Gen 2, 10000mAh battery.", specs:{ ram:"6GB", storage:"128GB", processor:"Snapdragon 7s Gen 2", display:'12.1" IPS LCD 144Hz', battery:"10000mAh" } },
+    { name:"Realme Pad 2",             brand:"Realme",  price:21999, rating:4.2, desc:"11\" 2K display, 8-speaker Dolby Atmos audio, Helio G99.", specs:{ ram:"6GB", storage:"128GB", processor:"Helio G99", display:'11" 2K IPS LCD', battery:"8360mAh" } },
+    { name:"Samsung Galaxy Tab S6 Lite", brand:"Samsung", price:26999, rating:4.3, desc:"Compact 10.4\" tablet with S Pen and Oxford Grey design.", specs:{ ram:"4GB", storage:"128GB", processor:"Exynos 1280", display:'10.4" TFT LCD', battery:"7040mAh" } },
   ];
-  tvData.forEach((p, i) => {
-    items.push({ id: `tv_${i}`, ...p, category: "tvs", stock: Math.floor(Math.random() * 20) + 1, reviews: Math.floor(Math.random() * 500) + 30, discount: Math.floor(Math.random() * 25) + 5 });
-  });
+  tabletsData.forEach((p,i) => items.push({ id:`tab_${i}`, ...p, image:getImg(p.name,"tablets"), category:"tablets", stock:rnd(2,30), reviews:rnd(50,600), discount:rnd(5,20) }));
 
-  const accessoriesData = [
-    { name: "Sony WH-1000XM5", brand: "Sony", price: 29990, rating: 4.9, specs: { type: "Over-ear", connectivity: "Bluetooth 5.2", anc: "Yes", battery: "30hr", driver: "30mm" }, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80" },
-    { name: "Apple AirPods Pro 2nd Gen", brand: "Apple", price: 24900, rating: 4.8, specs: { type: "In-ear", connectivity: "Bluetooth 5.3", anc: "Adaptive ANC", battery: "6hr+30hr", driver: "Custom" }, image: "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?w=400&q=80" },
-    { name: "Samsung Galaxy Buds3 Pro", brand: "Samsung", price: 17999, rating: 4.6, specs: { type: "In-ear", connectivity: "Bluetooth 5.4", anc: "Intelligent ANC", battery: "6hr+24hr", driver: "10.5mm" }, image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&q=80" },
-    { name: "Logitech MX Master 3S", brand: "Logitech", price: 9995, rating: 4.8, specs: { type: "Mouse", connectivity: "USB-C+Bluetooth", dpi: "8000", battery: "70 days", buttons: "7" }, image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80" },
-    { name: "Apple Magic Keyboard", brand: "Apple", price: 11900, rating: 4.7, specs: { type: "Keyboard", connectivity: "Bluetooth", layout: "Full-size", battery: "1 month", backlit: "No" }, image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400&q=80" },
-    { name: "Samsung 27\" Odyssey G7", brand: "Samsung", price: 49999, rating: 4.7, specs: { type: "Monitor", resolution: "QHD 1440p", refresh: "240Hz", panel: "Curved VA", hdr: "HDR600" }, image: "https://images.unsplash.com/photo-1547119957-637f8679db1e?w=400&q=80" },
-    { name: "Anker 100W GaN Charger", brand: "Anker", price: 3999, rating: 4.6, specs: { type: "Charger", ports: "3 USB-C + 1 USB-A", wattage: "100W", technology: "GaN", size: "Compact" }, image: "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&q=80" },
-    { name: "Seagate 4TB Portable HDD", brand: "Seagate", price: 8999, rating: 4.4, specs: { type: "Storage", capacity: "4TB", interface: "USB 3.0", speed: "120MB/s", size: "2.5\"" }, image: "https://images.unsplash.com/photo-1531492746076-161ca9bcad58?w=400&q=80" },
+  // HEADPHONES
+  const headphonesData = [
+    { name:"Sony WH-1000XM5",        brand:"Sony",    price:29990, rating:4.9, desc:"Industry-leading noise cancellation with 30hr battery and Speak-to-Chat.", specs:{ type:"Over-ear", anc:"Yes", battery:"30hr", connectivity:"BT 5.2", driver:"30mm" } },
+    { name:"Sony WF-1000XM5",        brand:"Sony",    price:24990, rating:4.8, desc:"True wireless, best-in-class ANC, 8hr battery + 16hr case.", specs:{ type:"In-ear TWS", anc:"Yes", battery:"8hr+16hr", connectivity:"BT 5.3", driver:"8.4mm" } },
+    { name:"Apple AirPods Pro 2nd Gen", brand:"Apple", price:24900, rating:4.8, desc:"Adaptive ANC, Spatial Audio, H2 chip, MagSafe charging.", specs:{ type:"In-ear TWS", anc:"Adaptive ANC", battery:"6hr+30hr", connectivity:"BT 5.3", driver:"Custom" } },
+    { name:"Apple AirPods Max",      brand:"Apple",   price:59900, rating:4.7, desc:"Over-ear premium ANC headphones with Spatial Audio and H1 chip.", specs:{ type:"Over-ear", anc:"Yes", battery:"20hr", connectivity:"BT 5.0", driver:"40mm" } },
+    { name:"boAt Rockerz 550 Pro",   brand:"boAt",    price:2499,  rating:4.2, desc:"40mm drivers, 80hr playback, foldable design with deep bass.", specs:{ type:"Over-ear", anc:"No", battery:"80hr", connectivity:"BT 5.2", driver:"40mm" } },
+    { name:"boAt Airdopes 311 Pro",  brand:"boAt",    price:1299,  rating:4.0, desc:"TWS earbuds, 35hr total battery, ENx mic, IPX4 water resistant.", specs:{ type:"In-ear TWS", anc:"No", battery:"7hr+28hr", connectivity:"BT 5.3", driver:"10mm" } },
+    { name:"boAt Rockerz 255 Pro+",  brand:"boAt",    price:1499,  rating:4.1, desc:"Neckband style, ASAP charging, 40hr battery, magnetic earbuds.", specs:{ type:"Neckband", anc:"No", battery:"40hr", connectivity:"BT 5.0", driver:"10mm" } },
+    { name:"Noise Buds VS404",       brand:"Noise",   price:1499,  rating:4.0, desc:"ANC TWS earbuds with 50hr total battery and quad mic.", specs:{ type:"In-ear TWS", anc:"Yes", battery:"8hr+42hr", connectivity:"BT 5.3", driver:"13mm" } },
+    { name:"Noise Shots X5 Pro",     brand:"Noise",   price:1999,  rating:4.1, desc:"TWS earbuds with 30hr playback, 13mm drivers, IPX5.", specs:{ type:"In-ear TWS", anc:"No", battery:"6hr+24hr", connectivity:"BT 5.3", driver:"13mm" } },
+    { name:"Noise Cancellation Plus", brand:"Noise",  price:2999,  rating:4.2, desc:"ENC for calls, 45hr playtime, foldable over-ear headphone.", specs:{ type:"Over-ear", anc:"No", battery:"45hr", connectivity:"BT 5.0", driver:"40mm" } },
+    { name:"OnePlus Nord Buds 2",    brand:"OnePlus", price:2299,  rating:4.2, desc:"ANC, 36hr total battery, 12.4mm drivers, IP55 water resistant.", specs:{ type:"In-ear TWS", anc:"Yes", battery:"7hr+29hr", connectivity:"BT 5.3", driver:"12.4mm" } },
+    { name:"Realme Buds Air 5 Pro",  brand:"Realme",  price:2999,  rating:4.2, desc:"50dB ANC, LDAC, 38hr battery, fast charge.", specs:{ type:"In-ear TWS", anc:"Yes", battery:"9hr+29hr", connectivity:"BT 5.3", driver:"11mm" } },
+    { name:"Redmi Buds 5 Pro",       brand:"Redmi",   price:1999,  rating:4.1, desc:"52dB ANC, LHDC, 38hr total playtime, dual connectivity.", specs:{ type:"In-ear TWS", anc:"Yes", battery:"9hr+29hr", connectivity:"BT 5.3", driver:"10mm" } },
+    { name:"Samsung Galaxy Buds2 Pro", brand:"Samsung", price:12999, rating:4.5, desc:"360° Audio, intelligent ANC, 29hr total, IPX7 waterproof.", specs:{ type:"In-ear TWS", anc:"Yes", battery:"5hr+24hr", connectivity:"BT 5.3", driver:"10mm" } },
+    { name:"JBL Tune 760NC",         brand:"JBL",     price:4499,  rating:4.3, desc:"50hr battery, ANC, foldable headphone with JBL Pure Bass sound.", specs:{ type:"Over-ear", anc:"Yes", battery:"50hr", connectivity:"BT 5.0", driver:"40mm" } },
+    { name:"JBL Tune Beam",          brand:"JBL",     price:4999,  rating:4.3, desc:"True ANC earbuds, Beam-forming mics, 48hr total battery.", specs:{ type:"In-ear TWS", anc:"Yes", battery:"8hr+40hr", connectivity:"BT 5.3", driver:"10mm" } },
   ];
-  accessoriesData.forEach((p, i) => {
-    items.push({ id: `acc_${i}`, ...p, category: "accessories", stock: Math.floor(Math.random() * 100) + 5, reviews: Math.floor(Math.random() * 1200) + 200, discount: Math.floor(Math.random() * 30) + 5 });
-  });
+  headphonesData.forEach((p,i) => items.push({ id:`hp_${i}`, ...p, image:getImg(p.name,"headphones"), category:"headphones", stock:rnd(5,80), reviews:rnd(500,3000), discount:rnd(8,30) }));
 
-  const camerasData = [
-    { name: "Sony Alpha A7 IV", brand: "Sony", price: 219990, rating: 4.9, specs: { sensor: "33MP Full Frame", video: "4K 60fps", iso: "100-51200", stabilization: "5-axis IBIS", weight: "657g" }, image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&q=80" },
-    { name: "Canon EOS R6 Mark II", brand: "Canon", price: 214990, rating: 4.8, specs: { sensor: "24.2MP Full Frame", video: "4K 60fps", iso: "100-102400", stabilization: "8-stop IBIS", weight: "670g" }, image: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&q=80" },
-    { name: "Nikon Z8", brand: "Nikon", price: 349990, rating: 4.9, specs: { sensor: "45.7MP Full Frame", video: "8K 60fps", iso: "64-25600", stabilization: "6-stop VR", weight: "820g" }, image: "https://images.unsplash.com/photo-1471341971476-ae15ff5dd4ea?w=400&q=80" },
-    { name: "GoPro HERO12 Black", brand: "GoPro", price: 44990, rating: 4.7, specs: { sensor: "27MP", video: "5.3K 60fps", waterproof: "10m", stabilization: "HyperSmooth 6.0", battery: "155min" }, image: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=400&q=80" },
-    { name: "DJI Osmo Pocket 3", brand: "DJI", price: 59990, rating: 4.8, specs: { sensor: "1-inch CMOS", video: "4K 120fps", stabilization: "3-axis Gimbal", display: '2" Touchscreen', battery: "166min" }, image: "https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=400&q=80" },
+  // SPEAKERS
+  const speakersData = [
+    { name:"JBL PartyBox 310",    brand:"JBL",       price:29990, rating:4.7, desc:"240W portable party speaker, 18hr battery, LED light show.", specs:{ power:"240W", battery:"18hr", connectivity:"BT 5.1", waterproof:"IPX4", features:"LED Light Show" } },
+    { name:"JBL Charge 5",        brand:"JBL",       price:14999, rating:4.5, desc:"30W portable speaker, IP67, 20hr battery, power bank feature.", specs:{ power:"30W", battery:"20hr", connectivity:"BT 5.1", waterproof:"IP67", features:"Power Bank" } },
+    { name:"JBL Flip 6",          brand:"JBL",       price:10999, rating:4.4, desc:"30W portable speaker, IP67, 12hr battery, PartyBoost.", specs:{ power:"30W", battery:"12hr", connectivity:"BT 5.1", waterproof:"IP67", features:"PartyBoost" } },
+    { name:"Sony SRS-XB43",       brand:"Sony",      price:14999, rating:4.5, desc:"Extra Bass, IP67, 24hr battery, Light & Sound party speaker.", specs:{ power:"32W", battery:"24hr", connectivity:"BT 5.0", waterproof:"IP67", features:"Party Connect" } },
+    { name:"Sony SRS-XE200",      brand:"Sony",      price:9999,  rating:4.3, desc:"360° omnidirectional sound, IP67, 16hr battery.", specs:{ power:"20W", battery:"16hr", connectivity:"BT 5.2", waterproof:"IP67", features:"Line Shape Diffuser" } },
+    { name:"boAt Stone 1000",     brand:"boAt",      price:2499,  rating:4.1, desc:"10W portable speaker with 8hr battery and waterproof design.", specs:{ power:"10W", battery:"8hr", connectivity:"BT 5.0", waterproof:"IPX7", features:"TWS Pairing" } },
+    { name:"boAt Aavante Bar 2000D", brand:"boAt",   price:4999,  rating:4.2, desc:"80W soundbar with Dolby Audio, HDMI ARC, 2.1 channel.", specs:{ power:"80W", battery:"N/A", connectivity:"BT+HDMI+Optical", waterproof:"No", features:"Dolby Audio+DSP" } },
+    { name:"Zebronics Zeb-County", brand:"Zebronics", price:999,  rating:4.1, desc:"Budget-friendly Bluetooth speaker with USB/TF card support.", specs:{ power:"6W", battery:"4hr", connectivity:"BT 5.0", waterproof:"No", features:"USB+TF+AUX" } },
+    { name:"Zebronics Zeb-Action Pro", brand:"Zebronics", price:1799, rating:4.0, desc:"14W portable speaker, IPX5, 8hr battery, dual pairing.", specs:{ power:"14W", battery:"8hr", connectivity:"BT 5.3", waterproof:"IPX5", features:"TWS Pairing" } },
+    { name:"Samsung Sound Tower MX-T40", brand:"Samsung", price:19990, rating:4.4, desc:"160W mega sound with LED lighting and Karaoke mode.", specs:{ power:"160W", battery:"N/A", connectivity:"BT+USB+AUX", waterproof:"IP56", features:"Karaoke+LED" } },
   ];
-  camerasData.forEach((p, i) => {
-    items.push({ id: `cam_${i}`, ...p, category: "cameras", stock: Math.floor(Math.random() * 15) + 1, reviews: Math.floor(Math.random() * 400) + 30, discount: Math.floor(Math.random() * 12) + 3 });
-  });
+  speakersData.forEach((p,i) => items.push({ id:`spk_${i}`, ...p, image:getImg(p.name,"speakers"), category:"speakers", stock:rnd(3,40), reviews:rnd(100,1500), discount:rnd(5,25) }));
 
-  const gamingData = [
-    { name: "PlayStation 5 Slim", brand: "Sony", price: 54990, rating: 4.9, specs: { processor: "AMD Zen 2 8-core", gpu: "AMD RDNA 2 10.3TF", storage: "1TB SSD", resolution: "8K capable", fps: "120fps" }, image: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400&q=80" },
-    { name: "Xbox Series X", brand: "Microsoft", price: 54990, rating: 4.8, specs: { processor: "AMD Zen 2 8-core", gpu: "AMD RDNA 2 12TF", storage: "1TB NVMe SSD", resolution: "4K native", fps: "120fps" }, image: "https://images.unsplash.com/photo-1621259182978-fbf93132d53d?w=400&q=80" },
-    { name: "Nintendo Switch OLED", brand: "Nintendo", price: 34999, rating: 4.7, specs: { display: '7" OLED', processor: "Nvidia Tegra X1+", storage: "64GB", battery: "9hr", modes: "3-in-1" }, image: "https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=400&q=80" },
-    { name: "Razer DeathAdder V3 HyperSpeed", brand: "Razer", price: 8499, rating: 4.8, specs: { type: "Gaming Mouse", dpi: "30000", sensor: "Focus Pro 30K", battery: "285hr", weight: "77g" }, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80" },
-    { name: "SteelSeries Arctis Nova Pro", brand: "SteelSeries", price: 29999, rating: 4.7, specs: { type: "Gaming Headset", connectivity: "USB + 2.4GHz", anc: "Active Noise Cancellation", battery: "22hr", surround: "360° Audio" }, image: "https://images.unsplash.com/photo-1545127398-14699f92334b?w=400&q=80" },
-    { name: "Asus ROG Swift 27\" OLED", brand: "Asus", price: 89999, rating: 4.9, specs: { type: "Gaming Monitor", resolution: "2560×1440", refresh: "360Hz", panel: "OLED", response: "0.03ms" }, image: "https://images.unsplash.com/photo-1547119957-637f8679db1e?w=400&q=80" },
+  // SMARTWATCHES
+  const watchData = [
+    { name:"Apple Watch Ultra 2",         brand:"Apple",   price:89900, rating:4.9, desc:"Titanium case, 60hr battery, precision dual-frequency GPS.", specs:{ display:"49mm LTPO OLED", battery:"60hr", gps:"Dual-frequency", water:"100m", os:"watchOS 10" } },
+    { name:"Apple Watch Series 9",        brand:"Apple",   price:41900, rating:4.8, desc:"Double tap gesture, Crash Detection, Carbon Neutral, S9 chip.", specs:{ display:"45mm Retina OLED", battery:"18hr", gps:"GPS+GLONASS", water:"50m", os:"watchOS 10" } },
+    { name:"Samsung Galaxy Watch 6 Classic", brand:"Samsung", price:39999, rating:4.6, desc:"Iconic rotating bezel, 3-day battery, advanced health tracking.", specs:{ display:"47mm Super AMOLED", battery:"3 days", gps:"GPS+GLONASS", water:"5ATM", os:"Wear OS 4" } },
+    { name:"Samsung Galaxy Watch 6",      brand:"Samsung", price:27999, rating:4.5, desc:"Sapphire glass, body composition sensor, 40hr battery.", specs:{ display:"44mm Super AMOLED", battery:"40hr", gps:"GPS+GLONASS", water:"5ATM", os:"Wear OS 4" } },
+    { name:"OnePlus Watch 2",             brand:"OnePlus", price:24999, rating:4.4, desc:"Wear OS 4, 100hr battery mode, dual-chipset architecture.", specs:{ display:"1.43\" AMOLED", battery:"100hr eco", gps:"GPS+GLONASS", water:"IP68", os:"Wear OS 4" } },
+    { name:"Noise ColorFit Ultra 3",      brand:"Noise",   price:4499,  rating:4.3, desc:"1.96\" AMOLED, Bluetooth calling, 100+ sports modes.", specs:{ display:"1.96\" AMOLED", battery:"7 days", gps:"No", water:"IP68", os:"Proprietary" } },
+    { name:"Noise Icon 3",               brand:"Noise",   price:1999,  rating:4.0, desc:"Bluetooth calling, 1.8\" display, 100 sports modes, 7-day battery.", specs:{ display:"1.8\" TFT", battery:"7 days", gps:"No", water:"IP68", os:"Proprietary" } },
+    { name:"Realme Watch S2",            brand:"Realme",  price:3499,  rating:4.1, desc:"1.4\" AMOLED display, 12-day battery, 110 workout modes.", specs:{ display:"1.4\" AMOLED", battery:"12 days", gps:"No", water:"IP68", os:"Proprietary" } },
+    { name:"Redmi Watch 4",              brand:"Redmi",   price:3999,  rating:4.2, desc:"1.75\" AMOLED, Bluetooth calling, 20 days battery, GPS.", specs:{ display:"1.75\" AMOLED", battery:"20 days", gps:"Standalone GPS", water:"5ATM", os:"Proprietary" } },
+    { name:"Samsung Galaxy Fit3",        brand:"Samsung", price:5999,  rating:4.1, desc:"Fitness band with 1.6\" AMOLED, 13-day battery, auto workout.", specs:{ display:"1.6\" AMOLED", battery:"13 days", gps:"No", water:"5ATM", os:"Proprietary" } },
   ];
-  gamingData.forEach((p, i) => {
-    items.push({ id: `gam_${i}`, ...p, category: "gaming", stock: Math.floor(Math.random() * 25) + 1, reviews: Math.floor(Math.random() * 900) + 100, discount: Math.floor(Math.random() * 18) + 5 });
-  });
+  watchData.forEach((p,i) => items.push({ id:`wtch_${i}`, ...p, image:getImg(p.name,"smartwatch"), category:"smartwatch", stock:rnd(2,35), reviews:rnd(150,1200), discount:rnd(5,20) }));
 
-  const audioData = [
-    { name: "Bose QuietComfort Ultra", brand: "Bose", price: 32490, rating: 4.9, specs: { type: "Over-ear", anc: "CustomTune", battery: "24hr", connectivity: "Bluetooth 5.3", audio: "Spatial" }, image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=400&q=80" },
-    { name: "JBL PartyBox 310", brand: "JBL", price: 29990, rating: 4.7, specs: { type: "Party Speaker", power: "240W", battery: "18hr", connectivity: "BT 5.1 + USB", features: "LED Light Show" }, image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&q=80" },
-    { name: "Sonos Era 300", brand: "Sonos", price: 39999, rating: 4.8, specs: { type: "Smart Speaker", channels: "4.1.2", connectivity: "WiFi 6 + BT", audio: "Spatial / Dolby Atmos", voice: "Amazon / Google" }, image: "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=400&q=80" },
-    { name: "Apple HomePod 2nd Gen", brand: "Apple", price: 32900, rating: 4.6, specs: { type: "Smart Speaker", chip: "S9", connectivity: "WiFi 6 + BT 5.0", audio: "Spatial + Atmos", voice: "Siri" }, image: "https://images.unsplash.com/photo-1589003077984-894e133dabab?w=400&q=80" },
-    { name: "Marshall Emberton III", brand: "Marshall", price: 14999, rating: 4.7, specs: { type: "Portable Speaker", power: "20W", battery: "30hr", waterproof: "IP67", connectivity: "BT 5.3" }, image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&q=80" },
-    { name: "Sennheiser HD 660S2", brand: "Sennheiser", price: 39990, rating: 4.9, specs: { type: "Audiophile Headphones", impedance: "150Ω", driver: "40mm", frequency: "8-41500Hz", connectivity: "3.5mm / 6.3mm" }, image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&q=80" },
+  // CAMERAS
+  const camData = [
+    { name:"Sony Alpha A7 IV",      brand:"Sony",   price:219990, rating:4.9, desc:"33MP full-frame mirrorless with 5-axis IBIS and 4K 60fps video.", specs:{ sensor:"33MP Full Frame", video:"4K 60fps", iso:"100-51200", stabilization:"5-axis IBIS", weight:"657g" } },
+    { name:"Sony ZV-E10",           brand:"Sony",   price:61990,  rating:4.5, desc:"APS-C mirrorless vlog camera with flip screen and 4K video.", specs:{ sensor:"24.2MP APS-C", video:"4K", iso:"100-32000", stabilization:"OIS on lens", weight:"343g" } },
+    { name:"GoPro HERO12 Black",    brand:"GoPro",  price:44990,  rating:4.7, desc:"5.3K 60fps action camera, HyperSmooth 6.0, 10m waterproof.", specs:{ sensor:"27MP", video:"5.3K 60fps", waterproof:"10m", stabilization:"HyperSmooth 6.0", battery:"155min" } },
+    { name:"GoPro HERO11 Black",    brand:"GoPro",  price:34990,  rating:4.6, desc:"5.3K60 + 24.7MP with new 1/1.9\" sensor, waterproof to 10m.", specs:{ sensor:"24.7MP", video:"5.3K 60fps", waterproof:"10m", stabilization:"HyperSmooth 5.0", battery:"158min" } },
+    { name:"Canon EOS M50 Mark II", brand:"Canon",  price:62990,  rating:4.4, desc:"Dual Pixel AF, 4K video, flip touchscreen, Wi-Fi/BT.", specs:{ sensor:"24.1MP APS-C", video:"4K 25fps", iso:"100-25600", stabilization:"OIS on lens", weight:"387g" } },
+    { name:"Nikon Z30",             brand:"Nikon",  price:59990,  rating:4.4, desc:"Vlogging mirrorless camera, 20.9MP, flip-out touchscreen.", specs:{ sensor:"20.9MP APS-C", video:"4K 30fps", iso:"100-51200", stabilization:"OIS on lens", weight:"405g" } },
+    { name:"Canon PowerShot G7X III", brand:"Canon", price:54990, rating:4.5, desc:"Compact vlog camera with flip screen, 4K, built-in ND filter.", specs:{ sensor:"20.1MP 1-inch", video:"4K", iso:"125-12800", stabilization:"OIS", weight:"304g" } },
+    { name:"Samsung Galaxy Camera FE", brand:"Samsung", price:29990, rating:4.0, desc:"Compact point-and-shoot with 16MP, f/2.2 lens.", specs:{ sensor:"16MP", video:"4K", iso:"100-6400", stabilization:"OIS", weight:"218g" } },
+    { name:"Sony Cyber-shot W800", brand:"Sony",    price:8490,   rating:4.0, desc:"20.1MP compact camera, 5× optical zoom, affordable photography.", specs:{ sensor:"20.1MP CCD", video:"HD 720p", iso:"80-3200", stabilization:"OIS", weight:"157g" } },
+    { name:"Canon EOS 200D II",    brand:"Canon",   price:49990,  rating:4.6, desc:"DSLR with Dual Pixel AF, 24.1MP, 4K video, flip touchscreen.", specs:{ sensor:"24.1MP APS-C", video:"4K", iso:"100-25600", stabilization:"Lens-based", weight:"449g" } },
   ];
-  audioData.forEach((p, i) => {
-    items.push({ id: `aud_${i}`, ...p, category: "audio", stock: Math.floor(Math.random() * 40) + 2, reviews: Math.floor(Math.random() * 600) + 80, discount: Math.floor(Math.random() * 22) + 5 });
-  });
+  camData.forEach((p,i) => items.push({ id:`cam_${i}`, ...p, image:getImg(p.name,"cameras"), category:"cameras", stock:rnd(1,15), reviews:rnd(30,400), discount:rnd(3,10) }));
+
+  // ACCESSORIES
+  const accData = [
+    { name:"Anker 100W GaN Charger",            brand:"Anker",      price:3999, rating:4.6, desc:"3-port GaN charger with 100W output, compact travel-ready.", specs:{ type:"Charger", ports:"3 USB-C+1 USB-A", wattage:"100W", technology:"GaN", size:"Compact" } },
+    { name:"Portronics Mport 3C Hub",           brand:"Portronics", price:1499, rating:4.2, desc:"7-in-1 USB-C hub with HDMI 4K, USB 3.0, SD card reader.", specs:{ type:"USB Hub", ports:"7-in-1", video:"HDMI 4K", usb:"USB 3.0 x3", extra:"SD+MicroSD" } },
+    { name:"Zebronics Zeb-Zap Wireless Charger", brand:"Zebronics", price:999,  rating:4.0, desc:"15W Qi wireless pad with fast charge for Android and iOS.", specs:{ type:"Wireless Charger", output:"15W", compatibility:"Qi Universal", indicator:"LED", size:"100mm" } },
+    { name:"boAt BassHeads 900",                brand:"boAt",       price:1499, rating:4.1, desc:"Super Extra Bass wired headphone, 40mm drivers, foldable.", specs:{ type:"Wired Headphone", driver:"40mm", impedance:"32Ω", frequency:"20Hz-20KHz", connector:"3.5mm" } },
+    { name:"Portronics Charge Mate",            brand:"Portronics", price:799,  rating:4.0, desc:"5-in-1 USB charging hub with fast charge and surge protection.", specs:{ type:"USB Hub Charger", ports:"5 USB-A", wattage:"30W total", technology:"Smart IC", extra:"Surge Protection" } },
+    { name:"Zebronics ZEB-Shield Laptop Stand", brand:"Zebronics",  price:1299, rating:4.1, desc:"Foldable ergonomic laptop stand, height-adjustable, all-metal.", specs:{ type:"Laptop Stand", material:"Aluminum Alloy", compatibility:"10-17\" laptops", folds:"Yes", weight:"650g" } },
+    { name:"Realme Power Bank 20000mAh",        brand:"Realme",     price:1499, rating:4.3, desc:"20000mAh power bank, 33W fast charge, dual output ports.", specs:{ type:"Power Bank", capacity:"20000mAh", input:"USB-C 33W", output:"USB-A+USB-C 33W", size:"Compact" } },
+    { name:"Noise Power 10000mAh",              brand:"Noise",      price:999,  rating:4.0, desc:"Lightweight 10000mAh power bank, 18W PD fast charge.", specs:{ type:"Power Bank", capacity:"10000mAh", input:"USB-C 18W", output:"USB-A 18W", size:"Ultra Slim" } },
+    { name:"boAt Rugged V3 Cable",              brand:"boAt",       price:399,  rating:4.2, desc:"3-in-1 nylon braided fast charging cable, 65W, 1.5m length.", specs:{ type:"Charging Cable", length:"1.5m", connectors:"USB-A+C+Lightning+Micro", wattage:"65W", material:"Nylon Braided" } },
+    { name:"Lava ProMouse Wireless",            brand:"Lava",       price:699,  rating:3.9, desc:"Wireless ergonomic mouse with 3-DPI, 2.4GHz, 12-month battery.", specs:{ type:"Wireless Mouse", dpi:"800/1200/1600", battery:"12 months", connectivity:"2.4GHz", weight:"90g" } },
+  ];
+  accData.forEach((p,i) => items.push({ id:`acc_${i}`, ...p, image:getImg(p.name,"accessories"), category:"accessories", stock:rnd(5,100), reviews:rnd(200,2000), discount:rnd(8,30) }));
 
   return items;
 }
 
 const ALL_PRODUCTS = makeProducts();
 
-const DEALS = ALL_PRODUCTS.slice(0, 5).map((p, i) => ({
+const DEALS_DATA = [
+  ALL_PRODUCTS[0], ALL_PRODUCTS[5], ALL_PRODUCTS[10],
+  ALL_PRODUCTS[19], ALL_PRODUCTS[34], ALL_PRODUCTS[50],
+].filter(Boolean).map((p,i) => ({
   ...p,
-  dealPrice: Math.round(p.price * (1 - p.discount / 100)),
-  endTime: Date.now() + (i + 1) * 3600000 * 6,
+  dealPrice: Math.round(p.price * (1 - (p.discount + 5) / 100)),
+  endTime: Date.now() + (i + 1) * 3600000 * 7,
 }));
 
-// ─── COMPONENTS ──────────────────────────────────────────────────────────────
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const fp = p => "₹" + p.toLocaleString("en-IN");
 
-function Stars({ rating }) {
+function Stars({ rating, size = 13 }) {
   return (
-    <span style={{ fontSize: 13 }}>
-      {[1, 2, 3, 4, 5].map((s) => (
+    <span style={{ fontSize: size }}>
+      {[1,2,3,4,5].map(s => (
         <span key={s} className={s <= Math.round(rating) ? "star-filled" : "star-empty"}>★</span>
       ))}
     </span>
   );
 }
 
-function formatPrice(p) {
-  return "₹" + p.toLocaleString("en-IN");
-}
-
 function CountdownTimer({ endTime }) {
-  const [time, setTime] = useState({});
+  const [time, setTime] = useState({ h:0, m:0, s:0 });
   useEffect(() => {
     const calc = () => {
-      const diff = Math.max(0, endTime - Date.now());
-      setTime({
-        h: Math.floor(diff / 3600000),
-        m: Math.floor((diff % 3600000) / 60000),
-        s: Math.floor((diff % 60000) / 1000),
-      });
+      const d = Math.max(0, endTime - Date.now());
+      setTime({ h: Math.floor(d/3600000), m: Math.floor((d%3600000)/60000), s: Math.floor((d%60000)/1000) });
     };
     calc();
     const t = setInterval(calc, 1000);
     return () => clearInterval(t);
   }, [endTime]);
 
-  const block = (v, l) => (
-    <span style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 6, padding: "4px 8px", minWidth: 36, display: "inline-block", textAlign: "center", fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: 16 }}>
-      {String(v).padStart(2, "0")} <span style={{ display: "block", fontSize: 9, color: "#888", fontFamily: "'DM Sans',sans-serif", fontWeight: 400 }}>{l}</span>
+  const Block = ({ v, l }) => (
+    <span style={{ background:"rgba(240,48,96,0.12)", border:"1px solid rgba(240,48,96,0.22)", borderRadius:7, padding:"4px 8px", minWidth:36, display:"inline-block", textAlign:"center", fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#F03060" }}>
+      {String(v).padStart(2,"0")}
+      <span style={{ display:"block", fontSize:8, color:"#4E5F7A", fontFamily:"'DM Sans',sans-serif", fontWeight:400 }}>{l}</span>
     </span>
   );
-
   return (
-    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-      {block(time.h, "HRS")}
-      <span style={{ color: "#E63946", fontWeight: 700 }}>:</span>
-      {block(time.m, "MIN")}
-      <span style={{ color: "#E63946", fontWeight: 700 }}>:</span>
-      {block(time.s, "SEC")}
+    <div style={{ display:"flex", gap:4, alignItems:"center" }}>
+      <Block v={time.h} l="HRS" /><span style={{ color:"#F03060", fontWeight:700, fontSize:13 }}>:</span>
+      <Block v={time.m} l="MIN" /><span style={{ color:"#F03060", fontWeight:700, fontSize:13 }}>:</span>
+      <Block v={time.s} l="SEC" />
     </div>
   );
 }
 
 function Popup({ msg, icon, onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3000);
-    return () => clearTimeout(t);
-  }, [onClose]);
+  useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
   return (
-    <div className="popup">
-      <span style={{ fontSize: 22 }}>{icon}</span>
-      <span style={{ fontSize: 14, fontWeight: 500 }}>{msg}</span>
+    <div className="popup-glass">
+      <div style={{ width:38, height:38, background:"rgba(0,128,238,0.12)", border:"1px solid rgba(0,200,240,0.25)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>{icon}</div>
+      <div style={{ flex:1 }}>
+        <p style={{ fontSize:13, fontWeight:600, color:"#E2ECFF" }}>{msg}</p>
+        <p style={{ fontSize:11, color:"#4E5F7A", marginTop:2 }}>Electronic Store</p>
+      </div>
+      <button onClick={onClose} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:16, cursor:"pointer", padding:"2px 4px", flexShrink:0 }}>×</button>
     </div>
   );
 }
 
 function SkeletonCard() {
   return (
-    <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, overflow: "hidden", padding: 0 }}>
-      <div className="skeleton" style={{ height: 200 }} />
-      <div style={{ padding: 14 }}>
-        <div className="skeleton" style={{ height: 14, marginBottom: 8 }} />
-        <div className="skeleton" style={{ height: 12, width: "60%", marginBottom: 12 }} />
-        <div className="skeleton" style={{ height: 20, width: "40%" }} />
+    <div style={{ background:"#0B0F1E", border:"1px solid #141928", borderRadius:16, overflow:"hidden" }}>
+      <div className="skeleton" style={{ aspectRatio:"1/1" }} />
+      <div style={{ padding:14 }}>
+        <div className="skeleton" style={{ height:13, marginBottom:9 }} />
+        <div className="skeleton" style={{ height:11, width:"60%", marginBottom:12 }} />
+        <div className="skeleton" style={{ height:20, width:"42%" }} />
       </div>
     </div>
   );
 }
 
+function InputField({ icon, type="text", value, onChange, placeholder, required=false, style={} }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ position:"relative", ...style }}>
+      <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", fontSize:15, zIndex:1, opacity:focused?1:0.45, transition:"opacity 0.2s" }}>{icon}</span>
+      <input type={type} value={value} onChange={onChange} placeholder={placeholder} required={required}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} className="input-premium" />
+    </div>
+  );
+}
+
+// ─── PRODUCT CARD ─────────────────────────────────────────────────────────────
 function ProductCard({ product, onAddCart, onWishlist, onCompare, onView, wishlisted, inCompare }) {
   const [adding, setAdding] = useState(false);
-  const discountedPrice = Math.round(product.price * (1 - product.discount / 100));
+  const dp = Math.round(product.price * (1 - product.discount / 100));
+  const savings = product.price - dp;
 
-  const handleAdd = (e) => {
+  const handleAdd = e => {
     e.stopPropagation();
     setAdding(true);
     onAddCart(product);
-    setTimeout(() => setAdding(false), 600);
+    setTimeout(() => setAdding(false), 700);
   };
 
   return (
-    <div className="card-product" onClick={() => onView(product)} style={{ cursor: "pointer" }}>
-      <div style={{ position: "relative", overflow: "hidden" }}>
+    <div className="card-product" onClick={() => onView(product)} style={{ cursor:"pointer" }}>
+      {/* Image */}
+      <div className="card-img-wrap">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
-          style={{ width: "100%", height: 200, objectFit: "cover", display: "block", transition: "transform 0.3s ease" }}
-          onError={(e) => { e.target.src = `https://via.placeholder.com/400x300/111/333?text=${encodeURIComponent(product.name)}`; }}
-          onMouseEnter={(e) => { e.target.style.transform = "scale(1.05)"; }}
-          onMouseLeave={(e) => { e.target.style.transform = "scale(1)"; }}
+          onError={e => { e.target.src = CAT_FALLBACK[product.category] || `https://placehold.co/600x600/0B0F1E/00C8F0?text=${encodeURIComponent(product.name)}`; }}
         />
-        <span className="badge badge-red" style={{ position: "absolute", top: 10, left: 10 }}>-{product.discount}%</span>
-        <button
-          onClick={(e) => { e.stopPropagation(); onWishlist(product); }}
-          style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.6)", border: "none", borderRadius: "50%", width: 32, height: 32, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.2s" }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.15)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-        >
+        {/* Overlay gradient */}
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,7,15,0.7) 0%, transparent 50%)", pointerEvents:"none" }} />
+        {/* Discount badge */}
+        <span className="badge badge-red" style={{ position:"absolute", top:10, left:10 }}>-{product.discount}%</span>
+        {/* Wishlist */}
+        <button onClick={e => { e.stopPropagation(); onWishlist(product); }}
+          style={{ position:"absolute", top:10, right:10, background:"rgba(5,7,15,0.72)", backdropFilter:"blur(8px)", border:`1px solid ${wishlisted?"#F03060":"rgba(255,255,255,0.1)"}`, borderRadius:"50%", width:32, height:32, fontSize:14, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.2s", cursor:"pointer" }}>
           {wishlisted ? "❤️" : "🤍"}
         </button>
+        {/* Brand overlay */}
+        <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"6px 12px" }}>
+          <p style={{ fontSize:10, fontWeight:700, color:"#00C8F0", textTransform:"uppercase", letterSpacing:1.2 }}>{product.brand}</p>
+        </div>
         {product.stock < 5 && (
-          <span className="badge badge-red" style={{ position: "absolute", bottom: 10, right: 10 }}>Low Stock</span>
+          <span className="badge badge-red" style={{ position:"absolute", bottom:28, left:10 }}>Low Stock</span>
         )}
       </div>
-      <div style={{ padding: "14px 14px 16px" }}>
-        <p style={{ fontSize: 11, color: "#888", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{product.brand}</p>
-        <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 6, color: "#F0EDE8", lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{product.name}</h3>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-          <Stars rating={product.rating} />
-          <span style={{ fontSize: 12, color: "#888" }}>{product.rating} ({product.reviews})</span>
+
+      {/* Body */}
+      <div className="card-body">
+        <h3 style={{ fontSize:13, fontWeight:600, color:"#D0DEFF", lineHeight:1.45, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden", minHeight:38, marginBottom:7 }}>
+          {product.name}
+        </h3>
+        <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:9 }}>
+          <Stars rating={product.rating} size={12} />
+          <span style={{ fontSize:11, color:"#4E5F7A" }}>{product.rating} ({product.reviews})</span>
         </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-          <span className="price-tag" style={{ fontSize: 20, color: "#F0EDE8" }}>{formatPrice(discountedPrice)}</span>
-          <span style={{ fontSize: 13, color: "#555", textDecoration: "line-through" }}>{formatPrice(product.price)}</span>
+        <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:4 }}>
+          <span className="price-tag" style={{ fontSize:18, color:"#00C8F0" }}>{fp(dp)}</span>
+          <span style={{ fontSize:11, color:"#2E4060", textDecoration:"line-through" }}>{fp(product.price)}</span>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            className="btn-primary"
-            style={{ flex: 1, fontSize: 13, padding: "8px 12px", animation: adding ? "cartBounce 0.5s ease" : "none" }}
-            onClick={handleAdd}
-          >
-            {adding ? "✓ Added" : "Add to Cart"}
+        <p style={{ fontSize:11, color:"#00D97A", marginBottom:0 }}>Save {fp(savings)}</p>
+
+        {/* Footer buttons */}
+        <div className="card-footer" style={{ display:"flex", gap:7 }}>
+          <button className="btn-primary"
+            style={{ flex:1, fontSize:12, padding:"8px 10px", animation:adding?"cartBounce 0.6s ease":"none" }}
+            onClick={handleAdd}>
+            {adding ? "✓ Added!" : "Add to Cart"}
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onCompare(product); }}
-            style={{ background: inCompare ? "rgba(244,163,0,0.15)" : "#1a1a1a", border: `1px solid ${inCompare ? "#F4A300" : "#2a2a2a"}`, color: inCompare ? "#F4A300" : "#888", borderRadius: 8, padding: "8px 10px", fontSize: 12, transition: "all 0.2s" }}
-          >
-            ⊞
-          </button>
+          <button onClick={e => { e.stopPropagation(); onCompare(product); }}
+            style={{ background:inCompare?"rgba(0,128,238,0.14)":"#090D1C", border:`1px solid ${inCompare?"#00C8F0":"#141928"}`, color:inCompare?"#00C8F0":"#4E5F7A", borderRadius:9, padding:"8px 10px", fontSize:13, transition:"all 0.2s", cursor:"pointer", flexShrink:0 }}>⊞</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── CHATBOT ─────────────────────────────────────────────────────────────────
-
+// ─── CHATBOT ──────────────────────────────────────────────────────────────────
 function Chatbot({ user, cart, orders, onClose }) {
-  const [msgs, setMsgs] = useState([
-    { from: "bot", text: "Hi! I'm your Electronic Store assistant. How can I help you today? 👋" },
-  ]);
+  const [msgs, setMsgs] = useState([{ from:"bot", text:"Hi! I'm your Electronic Store assistant. How can I help? 👋" }]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const bottomRef = useRef(null);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, typing]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs, typing]);
 
-  const reply = (msg) => {
-    const lower = msg.toLowerCase();
-    if (lower.includes("name") || lower.includes("who am i")) {
-      return user ? `You are logged in as ${user.name} 😊` : "Please login to see your profile details.";
-    }
-    if (lower.includes("mobile") || lower.includes("number") || lower.includes("phone")) {
-      return user ? `Your registered mobile number is ${user.mobile}.` : "Please login first to access account details.";
-    }
-    if (lower.includes("order")) {
-      return orders.length > 0 ? `You have ${orders.length} order(s). Most recent: ${orders[orders.length - 1].items[0]?.name || "N/A"}.` : "You haven't placed any orders yet.";
-    }
-    if (lower.includes("cart")) {
-      return cart.length > 0 ? `You have ${cart.length} item(s) in your cart worth ${formatPrice(cart.reduce((s, i) => s + i.price * i.qty, 0))}.` : "Your cart is empty.";
-    }
-    if (lower.includes("payment") || lower.includes("pay")) {
-      return "We accept UPI and Cash on Delivery (COD). Simply choose your preferred method at checkout!";
-    }
-    if (lower.includes("return") || lower.includes("refund")) {
-      return "We offer 7-day easy returns! Contact our support team for a hassle-free refund process.";
-    }
-    if (lower.includes("delivery") || lower.includes("shipping")) {
-      return "We deliver across India! Standard delivery: 3-5 days. Express delivery: 1-2 days.";
-    }
-    if (lower.includes("contact") || lower.includes("address")) {
-      return "📍 Electronic Store, Sirsi, Uttara Kannada, Karnataka - 581355\n📞 111 1234 5555\n📧 electronicstore@gmail.com";
-    }
-    if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey")) {
-      return "Hello! How can I assist you today? Ask me about orders, products, payments, or anything else!";
-    }
-    return "Connecting to support… Please hold while a human agent joins. For immediate help, call 111 1234 5555.";
+  const reply = msg => {
+    const l = msg.toLowerCase();
+    if (l.match(/hi|hello|hey/))           return "Hello! Ask me anything about orders, products, payments or shipping! 🚀";
+    if (l.includes("name") || l.includes("who am i")) return user ? `You're logged in as ${user.name} 😊` : "Please save your profile to see your details.";
+    if (l.includes("order"))               return orders.length > 0 ? `You have ${orders.length} order(s). Latest: ${orders[orders.length-1].items[0]?.name||"N/A"}.` : "No orders yet. Start shopping!";
+    if (l.includes("cart"))                return cart.length > 0 ? `${cart.length} item(s) in cart worth ${fp(cart.reduce((s,i)=>s+i.price*i.qty,0))}.` : "Your cart is empty.";
+    if (l.includes("payment") || l.includes("pay")) return "We accept UPI (GPay, PhonePe, Paytm) and Cash on Delivery (COD).";
+    if (l.includes("return") || l.includes("refund")) return "7-day hassle-free returns! Refunds in 3–5 business days.";
+    if (l.includes("deliver") || l.includes("ship")) return "Standard: 3–5 days. Express: 1–2 days. Free shipping across India!";
+    if (l.includes("warranty"))            return "All products carry 1-year manufacturer warranty. Accessories: 6 months.";
+    if (l.includes("contact"))             return "📍 Electronic Store, Sirsi, Karnataka\n📞 111 1234 5555\n📧 electronicstore@gmail.com";
+    return "I'll connect you to a human agent. Call 111 1234 5555 or email electronicstore@gmail.com.";
   };
 
   const send = () => {
     if (!input.trim()) return;
     const text = input.trim();
     setInput("");
-    setMsgs((prev) => [...prev, { from: "user", text }]);
+    setMsgs(p => [...p, { from:"user", text }]);
     setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      setMsgs((prev) => [...prev, { from: "bot", text: reply(text) }]);
-    }, 1000);
+    setTimeout(() => { setTyping(false); setMsgs(p => [...p, { from:"bot", text:reply(text) }]); }, 850);
   };
 
   return (
     <div className="chat-window">
-      <div style={{ background: "linear-gradient(135deg,#E63946,#c8102e)", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 36, height: 36, background: "rgba(255,255,255,0.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🤖</div>
+      <div style={{ background:"linear-gradient(135deg,#050D1A,#091528)", padding:"13px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid rgba(0,200,240,0.12)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:9 }}>
+          <div style={{ width:36, height:36, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>🤖</div>
           <div>
-            <p style={{ fontWeight: 600, fontSize: 14 }}>AI Assistant</p>
-            <p style={{ fontSize: 11, opacity: 0.8, display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ width: 6, height: 6, background: "#4ade80", borderRadius: "50%", display: "inline-block" }} />Online
+            <p style={{ fontWeight:600, fontSize:13, color:"#fff" }}>AI Assistant</p>
+            <p style={{ fontSize:10, color:"rgba(255,255,255,0.5)", display:"flex", alignItems:"center", gap:3 }}>
+              <span style={{ width:5, height:5, background:"#00D97A", borderRadius:"50%", display:"inline-block" }} /> Online
             </p>
           </div>
         </div>
-        <button onClick={onClose} style={{ background: "none", border: "none", color: "#fff", fontSize: 20, lineHeight: 1 }}>×</button>
+        <button onClick={onClose} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.5)", fontSize:20, cursor:"pointer" }}>×</button>
       </div>
-      <div style={{ height: 300, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-        {msgs.map((m, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: m.from === "user" ? "flex-end" : "flex-start" }}>
-            <div className={m.from === "bot" ? "chat-bubble-bot" : "chat-bubble-user"}>{m.text}</div>
+      <div style={{ height:280, overflowY:"auto", padding:14, display:"flex", flexDirection:"column", gap:9 }}>
+        {msgs.map((m,i) => (
+          <div key={i} style={{ display:"flex", justifyContent:m.from==="user"?"flex-end":"flex-start" }}>
+            <div className={m.from==="bot"?"chat-bot-bubble":"chat-user-bubble"} style={{ whiteSpace:"pre-line" }}>{m.text}</div>
           </div>
         ))}
         {typing && (
-          <div style={{ display: "flex" }}>
-            <div className="chat-bubble-bot" style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              {[0, 1, 2].map((i) => (
-                <span key={i} style={{ width: 8, height: 8, background: "#555", borderRadius: "50%", animation: "pulse 1s infinite", animationDelay: `${i * 0.2}s` }} />
-              ))}
+          <div style={{ display:"flex" }}>
+            <div className="chat-bot-bubble" style={{ display:"flex", gap:3, alignItems:"center", padding:"10px 14px" }}>
+              {[0,1,2].map(i => <span key={i} style={{ width:7, height:7, background:"#3A4E68", borderRadius:"50%", animation:"pulse 1s infinite", animationDelay:`${i*0.2}s` }} />)}
             </div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
-      <div style={{ padding: "12px 16px", borderTop: "1px solid #1a1a1a", display: "flex", gap: 8 }}>
-        <input
-          className="input-field"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Ask anything…"
-          style={{ flex: 1 }}
-        />
-        <button className="btn-primary" onClick={send} style={{ padding: "8px 14px" }}>➤</button>
+      <div style={{ padding:"10px 14px", borderTop:"1px solid #141928", display:"flex", gap:7 }}>
+        <input className="input-premium" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask anything…" style={{ flex:1, paddingLeft:13 }} />
+        <button className="btn-primary" onClick={send} style={{ padding:"9px 12px", flexShrink:0 }}>➤</button>
       </div>
     </div>
   );
 }
 
-// ─── PAGES ───────────────────────────────────────────────────────────────────
+// ─── SEARCH OVERLAY ───────────────────────────────────────────────────────────
+function SearchOverlay({ onClose, onNavigate }) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState([]);
+  const inputRef = useRef(null);
 
-function LoginPage({ onLogin, onClose }) {
-  const [form, setForm] = useState({ mobile: "", password: "", name: "" });
-  const [mode, setMode] = useState("login");
-  const [err, setErr] = useState("");
+  useEffect(() => { setTimeout(() => inputRef.current?.focus(), 80); }, []);
 
-  const handle = () => {
-    if (!form.mobile || form.mobile.length < 10) { setErr("Enter valid 10-digit mobile number"); return; }
-    if (!form.password || form.password.length < 4) { setErr("Password must be at least 4 characters"); return; }
-    if (mode === "register" && !form.name) { setErr("Enter your name"); return; }
-    onLogin({ mobile: form.mobile, name: mode === "register" ? form.name : "User_" + form.mobile.slice(-4), password: form.password });
+  const handle = v => {
+    setQ(v);
+    if (v.trim()) {
+      setResults(ALL_PRODUCTS.filter(p =>
+        p.name.toLowerCase().includes(v.toLowerCase()) || p.brand.toLowerCase().includes(v.toLowerCase())
+      ).slice(0,8));
+    } else setResults([]);
   };
 
   return (
-    <div className="overlay-login" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "#111", border: "1px solid #222", borderRadius: 16, padding: 32, width: "100%", maxWidth: 400, animation: "successPop 0.3s ease" }}>
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>⚡</div>
-          <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 26, fontWeight: 700 }}>
-            <span className="gradient-text">Electronic Store</span>
-          </h2>
-          <p style={{ color: "#888", fontSize: 14, marginTop: 4 }}>{mode === "login" ? "Welcome back!" : "Create your account"}</p>
+    <div className="search-overlay" onClick={onClose}>
+      <div className="search-box" onClick={e => e.stopPropagation()}>
+        <div style={{ position:"relative", marginBottom:14 }}>
+          <span style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)", fontSize:20, color:"#00C8F0", zIndex:1 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C8F0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input ref={inputRef} className="search-input" value={q} onChange={e=>handle(e.target.value)} onKeyDown={e=>e.key==="Escape"&&onClose()} placeholder="Search products, brands…" />
+          <button onClick={onClose} style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)", background:"rgba(255,255,255,0.06)", border:"1px solid #141928", color:"#8A9BBD", borderRadius:7, padding:"3px 9px", fontSize:11, cursor:"pointer" }}>ESC</button>
         </div>
-        <div style={{ display: "flex", background: "#1a1a1a", borderRadius: 8, padding: 4, marginBottom: 24 }}>
-          {["login", "register"].map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: "8px", background: mode === m ? "linear-gradient(135deg,#E63946,#F4A300)" : "transparent", border: "none", color: mode === m ? "#fff" : "#888", borderRadius: 6, fontWeight: 600, fontSize: 14, textTransform: "capitalize", transition: "all 0.2s" }}>{m}</button>
-          ))}
-        </div>
-        {mode === "register" && (
-          <input className="input-field" placeholder="Your name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} style={{ marginBottom: 12 }} />
+        {results.length > 0 && (
+          <div style={{ background:"rgba(8,10,22,0.98)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:14, overflow:"hidden", boxShadow:"0 18px 55px rgba(0,0,0,0.6)" }}>
+            {results.map(p => (
+              <div key={p.id} onClick={() => { onNavigate("product",{product:p}); onClose(); }}
+                style={{ padding:"11px 16px", display:"flex", alignItems:"center", gap:12, cursor:"pointer", borderBottom:"1px solid #0D1524", transition:"background 0.12s" }}
+                onMouseEnter={e=>e.currentTarget.style.background="rgba(0,128,238,0.08)"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                <img src={p.image} alt="" style={{ width:44, height:44, objectFit:"contain", borderRadius:9, border:"1px solid #141928", flexShrink:0, background:"#060A16", padding:2 }}
+                  onError={e=>{e.target.src=CAT_FALLBACK[p.category]||"https://placehold.co/100x100/0B0F1E/00C8F0?text=P";}} />
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={{ fontSize:13, fontWeight:500, color:"#D0DEFF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</p>
+                  <p style={{ fontSize:11, color:"#4E5F7A" }}>{p.brand} • {CATEGORIES.find(c=>c.id===p.category)?.name}</p>
+                </div>
+                <span className="price-tag" style={{ fontSize:14, color:"#00C8F0", flexShrink:0 }}>{fp(Math.round(p.price*(1-p.discount/100)))}</span>
+              </div>
+            ))}
+          </div>
         )}
-        <input className="input-field" placeholder="Mobile number" type="tel" maxLength={10} value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} style={{ marginBottom: 12 }} />
-        <input className="input-field" placeholder="Password" type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} style={{ marginBottom: 8 }} onKeyDown={(e) => e.key === "Enter" && handle()} />
-        {err && <p style={{ color: "#E63946", fontSize: 13, marginBottom: 8 }}>{err}</p>}
-        <button className="btn-primary" style={{ width: "100%", marginTop: 8, padding: 12 }} onClick={handle}>
-          {mode === "login" ? "Login" : "Create Account"}
-        </button>
-        <p style={{ textAlign: "center", color: "#555", fontSize: 12, marginTop: 16 }}>By continuing, you agree to our Terms & Privacy Policy</p>
+        {q && results.length === 0 && (
+          <div style={{ background:"rgba(8,10,22,0.98)", border:"1px solid #141928", borderRadius:14, padding:"22px", textAlign:"center", color:"#4E5F7A" }}>
+            No results for "<span style={{ color:"#00C8F0" }}>{q}</span>"
+          </div>
+        )}
+        <p style={{ textAlign:"center", marginTop:10, fontSize:11, color:"#4E5F7A" }}>Press ESC or click outside to close</p>
       </div>
     </div>
   );
 }
 
-function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist, compareList, onCategoryClick, onDealsPage }) {
+// ─── MEGA MENU ────────────────────────────────────────────────────────────────
+function MegaMenu({ onNavigate }) {
+  const featuredBrands = BRANDS.slice(0,8);
+  return (
+    <div className="mega-menu">
+      {/* Column 1: Categories */}
+      <div>
+        <p className="mega-menu-title">Shop by Category</p>
+        {CATEGORIES.map(c => (
+          <div key={c.id} className="mega-item" onClick={() => onNavigate("category",{cat:c.id})}>
+            <span style={{ fontSize:17 }}>{c.icon}</span>
+            <span>{c.name}</span>
+          </div>
+        ))}
+      </div>
+      {/* Column 2: Brands */}
+      <div>
+        <p className="mega-menu-title">Top Brands</p>
+        {featuredBrands.map(b => (
+          <div key={b.id} className="mega-item" onClick={() => onNavigate("brands")}>
+            <span style={{ width:22, height:22, background:`${b.color}20`, border:`1px solid ${b.color}40`, borderRadius:"50%", display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:b.color, flexShrink:0 }}>{b.logo}</span>
+            <span>{b.name}</span>
+            <span style={{ marginLeft:"auto", fontSize:10, color:"#4E5F7A" }}>{b.country}</span>
+          </div>
+        ))}
+      </div>
+      {/* Column 3: Featured */}
+      <div>
+        <p className="mega-menu-title">Featured</p>
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {[
+            { label:"⚡ Flash Deals", desc:"Up to 40% off", page:"deals", badge:"HOT", color:"#F03060" },
+            { label:"📱 New Mobiles", desc:"Latest launches", page:"category", cat:"mobiles", badge:"NEW", color:"#00C8F0" },
+            { label:"💻 Gaming Laptops", desc:"High performance", page:"category", cat:"laptops", badge:"TOP", color:"#6457FF" },
+            { label:"🎧 Best Earbuds", desc:"ANC & premium", page:"category", cat:"headphones", badge:"PICK", color:"#00D97A" },
+          ].map(item => (
+            <div key={item.label}
+              onClick={() => item.cat ? onNavigate(item.page,{cat:item.cat}) : onNavigate(item.page)}
+              style={{ background:"rgba(0,128,238,0.06)", border:"1px solid #141928", borderRadius:10, padding:"10px 12px", cursor:"pointer", transition:"all 0.18s", display:"flex", alignItems:"center", gap:10 }}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.12)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.2)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.06)"; e.currentTarget.style.borderColor="#141928";}}>
+              <div style={{ flex:1 }}>
+                <p style={{ fontSize:12, fontWeight:600, color:"#D0DEFF" }}>{item.label}</p>
+                <p style={{ fontSize:10, color:"#4E5F7A" }}>{item.desc}</p>
+              </div>
+              <span className="badge" style={{ background:`${item.color}18`, color:item.color, border:`1px solid ${item.color}30` }}>{item.badge}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── HOME PAGE ────────────────────────────────────────────────────────────────
+function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist, compareList, onCategoryClick, onDealsPage, onNavigate }) {
   const [loading, setLoading] = useState(true);
-  const topSelling = products.slice(0, 5);
-  const flashDeals = DEALS;
+  const [heroVis, setHeroVis] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const topSelling = products.slice(0,8);
 
   useEffect(() => {
+    setHeroVis(true);
     const t = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(t);
   }, []);
 
-  const heroRef = useRef(null);
-  const [heroVisible, setHeroVisible] = useState(false);
-  useEffect(() => {
-    setHeroVisible(true);
-  }, []);
+  // Brand-filtered products
+  const brandProducts = selectedBrand
+    ? products.filter(p => p.brand === selectedBrand).slice(0,8)
+    : [];
+
+  const featuredBrands = BRANDS.slice(0,10);
 
   return (
-    <div className="page-enter">
-      {/* Hero */}
-      <div style={{ background: "linear-gradient(135deg,#0d0d0d 0%,#1a0a0a 50%,#0d0d0d 100%)", padding: "80px 24px 64px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 20% 50%, rgba(230,57,70,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(244,163,0,0.06) 0%, transparent 50%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: -60, right: -60, width: 300, height: 300, background: "radial-gradient(circle, rgba(230,57,70,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <p ref={heroRef} style={{ fontSize: 13, fontWeight: 600, letterSpacing: 4, color: "#E63946", textTransform: "uppercase", marginBottom: 16, opacity: heroVisible ? 1 : 0, transition: "opacity 0.6s ease 0.1s" }}>⚡ Karnataka's #1 Electronics Destination</p>
-        <h1 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: "clamp(36px,7vw,80px)", fontWeight: 700, lineHeight: 1.1, marginBottom: 20, opacity: heroVisible ? 1 : 0, transform: heroVisible ? "translateY(0)" : "translateY(30px)", transition: "all 0.7s ease 0.2s" }}>
-          <span className="gradient-text">Power Up</span>{" "}
-          <span style={{ color: "#F0EDE8" }}>Your World</span>
-        </h1>
-        <p style={{ fontSize: 16, color: "#888", maxWidth: 480, margin: "0 auto 32px", opacity: heroVisible ? 1 : 0, transition: "opacity 0.7s ease 0.4s" }}>Premium electronics, unbeatable prices. From smartphones to smart TVs — everything tech, all in one place.</p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", opacity: heroVisible ? 1 : 0, transition: "opacity 0.7s ease 0.5s" }}>
-          <button className="btn-primary" style={{ padding: "13px 28px", fontSize: 15 }} onClick={() => onCategoryClick("mobiles")}>Shop Now →</button>
-          <button className="btn-secondary" style={{ padding: "13px 28px", fontSize: 15 }} onClick={onDealsPage}>View Deals</button>
-        </div>
-        <div style={{ display: "flex", gap: 32, justifyContent: "center", marginTop: 48, flexWrap: "wrap" }}>
-          {[["10K+", "Products"], ["50K+", "Happy Customers"], ["5★", "Rating"], ["Free", "Delivery"]].map(([v, l]) => (
-            <div key={l} style={{ textAlign: "center" }}>
-              <p className="price-tag" style={{ fontSize: 22, fontWeight: 700 }}>{v}</p>
-              <p style={{ fontSize: 12, color: "#888" }}>{l}</p>
+    <div className="page-enter" style={{ width:"100%" }}>
+      {/* ── HERO ── */}
+      <div className="hero-bg" style={{ padding:"90px 0 72px" }}>
+        <div className="section-wrap" style={{ textAlign:"center" }}>
+          <div style={{ maxWidth:680, margin:"0 auto" }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:5, color:"#0080EE", textTransform:"uppercase", marginBottom:18, opacity:heroVis?1:0, transition:"opacity 0.6s ease 0.1s" }}>
+              ⚡ Karnataka's #1 Electronics Store
+            </p>
+            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:"clamp(38px,7.5vw,82px)", fontWeight:800, lineHeight:1.03, marginBottom:22, opacity:heroVis?1:0, transform:heroVis?"translateY(0)":"translateY(28px)", transition:"all 0.85s cubic-bezier(0.22,1,0.36,1) 0.2s" }}>
+              <span className="gradient-text">Power Up</span>
+              <br /><span style={{ color:"#E2ECFF" }}>Your World</span>
+            </h1>
+            <p style={{ fontSize:17, color:"#4E5F7A", maxWidth:480, margin:"0 auto 36px", lineHeight:1.7, opacity:heroVis?1:0, transition:"opacity 0.8s ease 0.4s" }}>
+              Premium electronics, unbeatable prices. Smartphones to Smart TVs — everything tech, all in one place.
+            </p>
+            <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", opacity:heroVis?1:0, transition:"opacity 0.8s ease 0.5s" }}>
+              <button className="neon-glow-btn" style={{ padding:"14px 32px", fontSize:15, fontFamily:"'Syne',sans-serif" }} onClick={() => onCategoryClick("mobiles")}>Shop Now →</button>
+              <button className="btn-secondary" style={{ padding:"14px 32px", fontSize:15 }} onClick={onDealsPage}>View Deals ⚡</button>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div style={{ padding: "48px 24px 32px", maxWidth: 1200, margin: "0 auto" }}>
-        <h2 className="section-title" style={{ marginBottom: 8 }}>Shop by <span className="gradient-text">Category</span></h2>
-        <p style={{ color: "#888", fontSize: 14, marginBottom: 28 }}>Browse our wide range of electronics</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(110px,1fr))", gap: 12 }}>
-          {CATEGORIES.map((c) => (
-            <div key={c.id} onClick={() => onCategoryClick(c.id)} style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: "20px 12px", textAlign: "center", cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = c.color; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${c.color}22`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a1a"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
-              <div style={{ fontSize: 28, marginBottom: 8, animation: "float 3s ease-in-out infinite", animationDelay: `${CATEGORIES.indexOf(c) * 0.3}s` }}>{c.icon}</div>
-              <p style={{ fontSize: 12, fontWeight: 500, color: "#ccc" }}>{c.name}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Flash Deals */}
-      <div style={{ padding: "0 24px 48px", maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-          <div>
-            <h2 className="section-title"><span style={{ color: "#E63946" }}>⚡ Flash</span> Deals</h2>
-            <p style={{ fontSize: 13, color: "#888" }}>Limited time — grab them fast!</p>
-          </div>
-          <button className="btn-secondary" onClick={onDealsPage} style={{ marginLeft: "auto" }}>See All Deals →</button>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 16 }}>
-          {loading ? [0, 1, 2, 3, 4].map((i) => <SkeletonCard key={i} />) : flashDeals.map((p) => (
-            <div key={p.id} className="card-product" onClick={() => onView(p)} style={{ cursor: "pointer" }}>
-              <div style={{ position: "relative" }}>
-                <img src={p.image} alt={p.name} loading="lazy" style={{ width: "100%", height: 180, objectFit: "cover" }} onError={(e) => { e.target.src = `https://via.placeholder.com/400x300/111/333?text=${encodeURIComponent(p.name)}`; }} />
-                <div style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg,#E63946,#F4A300)", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>DEAL -{p.discount}%</div>
-              </div>
-              <div style={{ padding: "12px 14px 14px" }}>
-                <p style={{ fontSize: 12, fontWeight: 500, color: "#F0EDE8", marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.name}</p>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-                  <span className="price-tag" style={{ fontSize: 18, color: "#E63946" }}>{formatPrice(p.dealPrice)}</span>
-                  <span style={{ fontSize: 12, color: "#555", textDecoration: "line-through" }}>{formatPrice(p.price)}</span>
+            <div style={{ display:"flex", gap:40, justifyContent:"center", marginTop:56, flexWrap:"wrap", opacity:heroVis?1:0, transition:"opacity 0.9s ease 0.6s" }}>
+              {[["10K+","Products"],["50K+","Customers"],["5 ★","Avg Rating"],["Free","Delivery"]].map(([v,l]) => (
+                <div key={l} style={{ textAlign:"center", animation:heroVis?"countUp 0.8s ease both":"none" }}>
+                  <p className="price-tag" style={{ fontSize:26, background:"linear-gradient(135deg,#00C8F0,#6457FF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{v}</p>
+                  <p style={{ fontSize:11, color:"#2E3E58", marginTop:3 }}>{l}</p>
                 </div>
-                <CountdownTimer endTime={p.endTime} />
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
+        </div>
+        {/* Decorative orbs */}
+        {[...Array(5)].map((_,i) => (
+          <div key={i} style={{ position:"absolute", width:6+i*3, height:6+i*3, borderRadius:"50%", background:`rgba(${i%2===0?"0,128,238":"100,87,255"},0.3)`, top:`${12+i*14}%`, left:`${5+i*16}%`, animation:`float ${3+i*0.4}s ease-in-out infinite`, animationDelay:`${i*0.4}s`, pointerEvents:"none" }} />
+        ))}
+      </div>
+
+      {/* ── CATEGORIES ── */}
+      <div style={{ padding:"56px 0 44px", width:"100%" }}>
+        <div className="section-wrap">
+          <h2 className="section-title" style={{ marginBottom:6 }}>Shop by <span className="gradient-text">Category</span></h2>
+          <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:28 }}>Browse our wide range of premium electronics</p>
+          <div className="cat-grid">
+            {CATEGORIES.map((c,idx) => (
+              <div key={c.id} onClick={() => onCategoryClick(c.id)}
+                style={{ background:"#0B0F1E", border:"1px solid #141928", borderRadius:14, padding:"20px 10px", textAlign:"center", cursor:"pointer", transition:"all 0.3s ease" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor=c.color; e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.background=`${c.color}0D`; e.currentTarget.style.boxShadow=`0 12px 32px ${c.color}1A`; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="#141928"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.background="#0B0F1E"; e.currentTarget.style.boxShadow="none"; }}>
+                <div style={{ fontSize:28, marginBottom:10, animation:`float ${3+idx*0.2}s ease-in-out infinite`, animationDelay:`${idx*0.2}s` }}>{c.icon}</div>
+                <p style={{ fontSize:11, fontWeight:600, color:"#8A9BBD" }}>{c.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Top Selling */}
-      <div style={{ padding: "0 24px 64px", maxWidth: 1200, margin: "0 auto" }}>
-        <h2 className="section-title" style={{ marginBottom: 4 }}>Top <span className="gradient-text">Selling</span></h2>
-        <p style={{ color: "#888", fontSize: 14, marginBottom: 28 }}>Most popular picks this week</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))", gap: 16 }}>
-          {loading ? [0, 1, 2, 3, 4].map((i) => <SkeletonCard key={i} />) : topSelling.map((p) => (
-            <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onWishlist} onCompare={onCompare} onView={onView} wishlisted={wishlist.some((w) => w.id === p.id)} inCompare={compareList.some((c) => c.id === p.id)} />
-          ))}
+      {/* ── FLASH DEALS ── */}
+      <div className="deals-bg" style={{ padding:"52px 0", width:"100%" }}>
+        <div className="section-wrap">
+          <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", marginBottom:26 }}>
+            <div>
+              <h2 className="section-title"><span className="gradient-text-warm">⚡ Flash</span> Deals</h2>
+              <p style={{ fontSize:12, color:"#4E5F7A", marginTop:4 }}>Limited-time offers — grab them before they expire!</p>
+            </div>
+            <button className="btn-secondary" onClick={onDealsPage} style={{ marginLeft:"auto" }}>See All Deals →</button>
+          </div>
+          <div className="product-grid">
+            {loading ? [0,1,2,3,4,5].map(i => <SkeletonCard key={i} />) : DEALS_DATA.map(p => (
+              <div key={p.id} className="card-product" onClick={() => onView(p)} style={{ cursor:"pointer", borderColor:"rgba(240,48,96,0.18)" }}>
+                <div className="card-img-wrap">
+                  <img src={p.image} alt={p.name} loading="lazy"
+                    onError={e=>{e.target.src=CAT_FALLBACK[p.category]||`https://placehold.co/600x600/0B0F1E/F03060?text=Deal`;}} />
+                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,7,15,0.65) 0%, transparent 50%)", pointerEvents:"none" }} />
+                  <div style={{ position:"absolute", top:10, left:10, background:"linear-gradient(135deg,#F03060,#FF6B35)", color:"#fff", borderRadius:7, padding:"4px 10px", fontSize:11, fontWeight:800 }}>DEAL -{p.discount+5}%</div>
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"5px 12px" }}>
+                    <p style={{ fontSize:10, fontWeight:700, color:"#F03060", textTransform:"uppercase", letterSpacing:1.2 }}>{p.brand}</p>
+                  </div>
+                </div>
+                <div className="card-body">
+                  <p style={{ fontSize:13, fontWeight:600, color:"#D0DEFF", marginBottom:6, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{p.name}</p>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:6 }}>
+                    <span className="price-tag" style={{ fontSize:18, color:"#F03060" }}>{fp(p.dealPrice)}</span>
+                    <span style={{ fontSize:11, color:"#2E4060", textDecoration:"line-through" }}>{fp(p.price)}</span>
+                  </div>
+                  <div style={{ marginTop:"auto" }}>
+                    <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:6 }}>Ends in:</p>
+                    <CountdownTimer endTime={p.endTime} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── BRANDS FILTER SECTION ── */}
+      <div style={{ padding:"52px 0", width:"100%", background:"#060912" }}>
+        <div className="section-wrap">
+          <h2 className="section-title" style={{ marginBottom:6 }}>Shop by <span className="gradient-text">Brand</span></h2>
+          <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:26 }}>Click a brand to explore their products</p>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:28 }}>
+            {selectedBrand && (
+              <button onClick={() => setSelectedBrand(null)}
+                className="btn-secondary" style={{ fontSize:12, padding:"6px 14px" }}>
+                ✕ Show All
+              </button>
+            )}
+            {featuredBrands.map(b => (
+              <button key={b.id} onClick={() => setSelectedBrand(selectedBrand===b.name ? null : b.name)}
+                style={{ display:"flex", alignItems:"center", gap:7, padding:"7px 15px", background:selectedBrand===b.name?`${b.color}18`:"#0B0F1E", border:`1px solid ${selectedBrand===b.name?b.color:"#141928"}`, borderRadius:9, cursor:"pointer", transition:"all 0.22s", color:selectedBrand===b.name?b.color:"#8A9BBD", fontSize:13, fontWeight:500 }}
+                onMouseEnter={e=>{if(selectedBrand!==b.name){e.currentTarget.style.borderColor=`${b.color}60`;e.currentTarget.style.color="#D0DEFF";}}}
+                onMouseLeave={e=>{if(selectedBrand!==b.name){e.currentTarget.style.borderColor="#141928";e.currentTarget.style.color="#8A9BBD";}}}>
+                <span style={{ width:20, height:20, background:`${b.color}20`, border:`1px solid ${b.color}35`, borderRadius:"50%", display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:800, color:b.color }}>{b.logo}</span>
+                {b.name}
+              </button>
+            ))}
+          </div>
+          {selectedBrand && brandProducts.length > 0 && (
+            <div style={{ animation:"fadeInUp 0.35s ease" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+                <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:700 }}>
+                  <span className="gradient-text">{selectedBrand}</span> Products
+                </h3>
+                <span className="badge badge-blue">{brandProducts.length} shown</span>
+                <button onClick={() => onNavigate("brands")} className="btn-secondary" style={{ marginLeft:"auto", fontSize:11, padding:"5px 12px" }}>View All →</button>
+              </div>
+              <div className="product-grid">
+                {brandProducts.map(p => (
+                  <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onWishlist} onCompare={onCompare} onView={onView} wishlisted={wishlist.some(w=>w.id===p.id)} inCompare={compareList.some(c=>c.id===p.id)} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── TOP SELLING ── */}
+      <div style={{ padding:"52px 0 72px", width:"100%" }}>
+        <div className="section-wrap">
+          <h2 className="section-title" style={{ marginBottom:6 }}>Top <span className="gradient-text">Selling</span></h2>
+          <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:28 }}>Most popular picks this week</p>
+          <div className="product-grid">
+            {loading ? [0,1,2,3,4,5,6,7].map(i=><SkeletonCard key={i} />) : topSelling.map(p=>(
+              <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onWishlist} onCompare={onCompare} onView={onView} wishlisted={wishlist.some(w=>w.id===p.id)} inCompare={compareList.some(c=>c.id===p.id)} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── WHY CHOOSE US ── */}
+      <div style={{ background:"linear-gradient(135deg,#060A14,#080C1C,#060A12)", borderTop:"1px solid #0E1420", borderBottom:"1px solid #0E1420", padding:"52px 0", width:"100%" }}>
+        <div className="section-wrap">
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:24 }}>
+            {[["🚚","Free Delivery","Free shipping on all orders across India"],["🔒","Secure Payment","100% safe & encrypted transactions"],["🔄","Easy Returns","Hassle-free 7-day return policy"],["⚡","Fast Support","24/7 customer care team"],["🏷️","Best Prices","Price match guarantee on all products"],["✅","100% Genuine","Authorized dealer for all brands"]].map(([ic,t,d]) => (
+              <div key={t} style={{ display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center", gap:10 }}>
+                <div style={{ width:50, height:50, background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:14, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, transition:"all 0.25s" }}
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.16)"; e.currentTarget.style.transform="scale(1.08)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.09)"; e.currentTarget.style.transform="scale(1)";}}>{ic}</div>
+                <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#C8D8F0" }}>{t}</p>
+                <p style={{ fontSize:11, color:"#2E3E58", lineHeight:1.55 }}>{d}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+// ─── CATEGORY PAGE ────────────────────────────────────────────────────────────
 function CategoryPage({ category, products, onAddCart, onWishlist, onCompare, onView, wishlist, compareList }) {
-  const [filters, setFilters] = useState({ brand: "", minPrice: 0, maxPrice: 1000000, sort: "default", search: "" });
-  const [showFilters, setShowFilters] = useState(false);
-  const catProducts = products.filter((p) => p.category === category);
-  const brands = [...new Set(catProducts.map((p) => p.brand))];
+  const [filters, setFilters] = useState({ brand:"", sort:"default", search:"" });
+  const catProducts = products.filter(p => p.category === category);
+  const brands = [...new Set(catProducts.map(p => p.brand))];
+  const catInfo = CATEGORIES.find(c => c.id === category);
 
   const filtered = catProducts
-    .filter((p) => (!filters.brand || p.brand === filters.brand) && p.price >= filters.minPrice && p.price <= filters.maxPrice && (!filters.search || p.name.toLowerCase().includes(filters.search.toLowerCase())))
-    .sort((a, b) => {
-      if (filters.sort === "price_asc") return a.price - b.price;
+    .filter(p =>
+      (!filters.brand || p.brand === filters.brand) &&
+      (!filters.search || p.name.toLowerCase().includes(filters.search.toLowerCase()) || p.brand.toLowerCase().includes(filters.search.toLowerCase()))
+    )
+    .sort((a,b) => {
+      if (filters.sort === "price_asc")  return a.price - b.price;
       if (filters.sort === "price_desc") return b.price - a.price;
-      if (filters.sort === "rating") return b.rating - a.rating;
+      if (filters.sort === "rating")     return b.rating - a.rating;
       return 0;
     });
 
-  const catInfo = CATEGORIES.find((c) => c.id === category);
-
   return (
-    <div className="page-enter" style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 className="section-title" style={{ fontSize: 32 }}>{catInfo?.icon} <span className="gradient-text">{catInfo?.name || category}</span></h1>
-        <p style={{ color: "#888", fontSize: 14 }}>{filtered.length} products found</p>
-      </div>
-      <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
-        <input className="input-field" placeholder="🔍 Search products…" value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} style={{ flex: "1 1 200px", maxWidth: 300 }} />
-        <select className="input-field" value={filters.brand} onChange={(e) => setFilters((f) => ({ ...f, brand: e.target.value }))} style={{ width: "auto" }}>
-          <option value="">All Brands</option>
-          {brands.map((b) => <option key={b} value={b}>{b}</option>)}
-        </select>
-        <select className="input-field" value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} style={{ width: "auto" }}>
-          <option value="default">Sort: Default</option>
-          <option value="price_asc">Price: Low → High</option>
-          <option value="price_desc">Price: High → Low</option>
-          <option value="rating">Top Rated</option>
-        </select>
-        <button className="btn-secondary" onClick={() => setShowFilters(!showFilters)} style={{ whiteSpace: "nowrap" }}>⚙ Filters</button>
-      </div>
-      {showFilters && (
-        <div style={{ background: "#111", border: "1px solid #222", borderRadius: 12, padding: 20, marginBottom: 24, animation: "slideDown 0.2s ease" }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Price Range</h3>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <input type="number" className="input-field" placeholder="Min price" value={filters.minPrice || ""} onChange={(e) => setFilters((f) => ({ ...f, minPrice: +e.target.value || 0 }))} style={{ width: 140 }} />
-            <input type="number" className="input-field" placeholder="Max price" value={filters.maxPrice === 1000000 ? "" : filters.maxPrice} onChange={(e) => setFilters((f) => ({ ...f, maxPrice: +e.target.value || 1000000 }))} style={{ width: 140 }} />
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <div style={{ marginBottom:24 }}>
+          <h1 className="section-title" style={{ fontSize:32 }}>{catInfo?.icon} <span className="gradient-text">{catInfo?.name || category}</span></h1>
+          <p style={{ color:"#4E5F7A", fontSize:13, marginTop:5 }}>{filtered.length} products found</p>
+        </div>
+        <div style={{ display:"flex", gap:10, marginBottom:24, flexWrap:"wrap", alignItems:"center" }}>
+          <div style={{ position:"relative", flex:"1 1 200px", maxWidth:300 }}>
+            <span style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", color:"#4E5F7A", fontSize:13 }}>🔍</span>
+            <input className="input-premium" placeholder="Search products…" value={filters.search} onChange={e=>setFilters(f=>({...f,search:e.target.value}))} style={{ paddingLeft:34 }} />
           </div>
+          <select className="input-premium" value={filters.brand} onChange={e=>setFilters(f=>({...f,brand:e.target.value}))} style={{ width:"auto", paddingLeft:13 }}>
+            <option value="">All Brands</option>
+            {brands.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+          <select className="input-premium" value={filters.sort} onChange={e=>setFilters(f=>({...f,sort:e.target.value}))} style={{ width:"auto", paddingLeft:13 }}>
+            <option value="default">Default Sort</option>
+            <option value="price_asc">Price: Low → High</option>
+            <option value="price_desc">Price: High → Low</option>
+            <option value="rating">Top Rated</option>
+          </select>
         </div>
-      )}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "64px 0" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>😕</div>
-          <p style={{ color: "#888" }}>No products found. Try adjusting filters.</p>
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))", gap: 16 }}>
-          {filtered.map((p) => (
-            <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onWishlist} onCompare={onCompare} onView={onView} wishlisted={wishlist.some((w) => w.id === p.id)} inCompare={compareList.some((c) => c.id === p.id)} />
-          ))}
-        </div>
-      )}
+        {filtered.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"72px 0" }}>
+            <div style={{ fontSize:52, marginBottom:14 }}>😕</div>
+            <p style={{ color:"#4E5F7A" }}>No products found. Try adjusting filters.</p>
+          </div>
+        ) : (
+          <div className="product-grid">
+            {filtered.map(p => (
+              <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onWishlist} onCompare={onCompare} onView={onView} wishlisted={wishlist.some(w=>w.id===p.id)} inCompare={compareList.some(c=>c.id===p.id)} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
+// ─── PRODUCT DETAIL ───────────────────────────────────────────────────────────
 function ProductDetailPage({ product, onAddCart, onWishlist, wishlisted, onBack, onCompare, inCompare }) {
   const [qty, setQty] = useState(1);
-  const discountedPrice = Math.round(product.price * (1 - product.discount / 100));
+  const dp = Math.round(product.price * (1 - product.discount / 100));
 
   return (
-    <div className="page-enter" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: "#888", fontSize: 14, cursor: "pointer", marginBottom: 24, display: "flex", alignItems: "center", gap: 6 }}>← Back</button>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
-        <div>
-          <div style={{ background: "#111", borderRadius: 16, overflow: "hidden", border: "1px solid #222" }}>
-            <img src={product.image} alt={product.name} style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover" }} onError={(e) => { e.target.src = `https://via.placeholder.com/600x450/111/333?text=${encodeURIComponent(product.name)}`; }} />
-          </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            {[0, 1, 2].map((i) => (
-              <div key={i} style={{ flex: 1, background: "#111", border: "1px solid #222", borderRadius: 8, overflow: "hidden", opacity: 0.6, cursor: "pointer" }}>
-                <img src={product.image} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover" }} onError={(e) => { e.target.src = `https://via.placeholder.com/200x200/111/333?text=IMG`; }} />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p style={{ fontSize: 12, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{product.brand} • {CATEGORIES.find((c) => c.id === product.category)?.name}</p>
-          <h1 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 12 }}>{product.name}</h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <Stars rating={product.rating} />
-            <span style={{ fontSize: 14, color: "#888" }}>{product.rating} ({product.reviews} reviews)</span>
-          </div>
-          <div style={{ background: "#111", border: "1px solid #222", borderRadius: 12, padding: 20, marginBottom: 20 }}>
-            <span className="badge badge-red" style={{ marginBottom: 12, display: "inline-block" }}>-{product.discount}% OFF</span>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-              <span className="price-tag gradient-text" style={{ fontSize: 36 }}>{formatPrice(discountedPrice)}</span>
-              <span style={{ fontSize: 16, color: "#555", textDecoration: "line-through" }}>{formatPrice(product.price)}</span>
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:13, cursor:"pointer", marginBottom:24, display:"flex", alignItems:"center", gap:5, transition:"color 0.2s" }} onMouseEnter={e=>e.currentTarget.style.color="#00C8F0"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>← Back</button>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:42 }} className="grid-mobile-1">
+          <div>
+            <div style={{ background:"#08101E", borderRadius:18, overflow:"hidden", border:"1px solid #141928", aspectRatio:"4/3" }}>
+              <img src={product.image} alt={product.name} style={{ width:"100%", height:"100%", objectFit:"contain", padding:12 }}
+                onError={e=>{e.target.src=CAT_FALLBACK[product.category]||`https://placehold.co/600x450/0B0F1E/00C8F0?text=${encodeURIComponent(product.name)}`;}} />
             </div>
-            <p style={{ fontSize: 13, color: "#22c55e", marginTop: 6 }}>You save {formatPrice(product.price - discountedPrice)}</p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-            <p style={{ fontSize: 14, color: "#888" }}>Qty:</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 0, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, overflow: "hidden" }}>
-              <button onClick={() => setQty(Math.max(1, qty - 1))} style={{ background: "none", border: "none", color: "#F0EDE8", padding: "8px 14px", fontSize: 16, cursor: "pointer" }}>−</button>
-              <span style={{ padding: "0 12px", fontSize: 15, fontWeight: 600 }}>{qty}</span>
-              <button onClick={() => setQty(Math.min(product.stock, qty + 1))} style={{ background: "none", border: "none", color: "#F0EDE8", padding: "8px 14px", fontSize: 16, cursor: "pointer" }}>+</button>
-            </div>
-            <span className={`badge ${product.stock > 5 ? "badge-green" : "badge-red"}`}>{product.stock > 5 ? "In Stock" : `Only ${product.stock} left`}</span>
-          </div>
-          <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-            <button className="btn-primary" style={{ flex: "1 1 150px", padding: 14, fontSize: 15 }} onClick={() => onAddCart({ ...product, qty })}>🛒 Add to Cart</button>
-            <button onClick={() => onWishlist(product)} style={{ padding: "14px 18px", background: "#1a1a1a", border: `1px solid ${wishlisted ? "#E63946" : "#2a2a2a"}`, borderRadius: 8, color: wishlisted ? "#E63946" : "#888", fontSize: 20, transition: "all 0.2s" }}>{wishlisted ? "❤️" : "🤍"}</button>
-            <button onClick={() => onCompare(product)} style={{ padding: "14px 18px", background: inCompare ? "rgba(244,163,0,0.1)" : "#1a1a1a", border: `1px solid ${inCompare ? "#F4A300" : "#2a2a2a"}`, borderRadius: 8, color: inCompare ? "#F4A300" : "#888", fontSize: 14, fontWeight: 500, transition: "all 0.2s" }}>⊞ Compare</button>
-          </div>
-          <div style={{ background: "#0d0d0d", border: "1px solid #1a1a1a", borderRadius: 12, padding: 16 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Specifications</p>
-            {Object.entries(product.specs).map(([k, v]) => (
-              <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #1a1a1a" }}>
-                <span style={{ fontSize: 13, color: "#888", textTransform: "capitalize" }}>{k}</span>
-                <span style={{ fontSize: 13, fontWeight: 500 }}>{v}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CartPage({ cart, onUpdateQty, onRemove, onCheckout, isLoggedIn, onLoginRequired }) {
-  const total = cart.reduce((s, i) => s + Math.round(i.price * (1 - i.discount / 100)) * i.qty, 0);
-
-  if (!isLoggedIn) {
-    return (
-      <div style={{ textAlign: "center", padding: "80px 24px" }}>
-        <div style={{ fontSize: 64, marginBottom: 20 }}>🔐</div>
-        <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 24, marginBottom: 12 }}>Login Required</h2>
-        <p style={{ color: "#888", marginBottom: 24 }}>Please login to view your cart and place orders</p>
-        <button className="btn-primary" onClick={onLoginRequired} style={{ padding: "12px 32px" }}>Login Now</button>
-      </div>
-    );
-  }
-
-  if (cart.length === 0) {
-    return (
-      <div style={{ textAlign: "center", padding: "80px 24px" }}>
-        <div style={{ fontSize: 64, marginBottom: 20 }}>🛒</div>
-        <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 24, marginBottom: 12 }}>Your Cart is Empty</h2>
-        <p style={{ color: "#888" }}>Add some awesome products to get started!</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="page-enter" style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 className="section-title" style={{ marginBottom: 28 }}>Shopping <span className="gradient-text">Cart</span></h1>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 24, alignItems: "start" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {cart.map((item) => {
-            const dp = Math.round(item.price * (1 - item.discount / 100));
-            return (
-              <div key={item.id + item.qty} style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 16, display: "flex", gap: 14, alignItems: "center" }}>
-                <img src={item.image} alt={item.name} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8 }} onError={(e) => { e.target.src = `https://via.placeholder.com/200x200/111/333?text=IMG`; }} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>{item.name}</p>
-                  <p style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>{item.brand}</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 6, overflow: "hidden" }}>
-                      <button onClick={() => onUpdateQty(item.id, item.qty - 1)} style={{ background: "none", border: "none", color: "#F0EDE8", padding: "4px 10px", cursor: "pointer" }}>−</button>
-                      <span style={{ padding: "0 8px", fontSize: 14 }}>{item.qty}</span>
-                      <button onClick={() => onUpdateQty(item.id, item.qty + 1)} style={{ background: "none", border: "none", color: "#F0EDE8", padding: "4px 10px", cursor: "pointer" }}>+</button>
-                    </div>
-                    <span className="price-tag" style={{ fontSize: 16 }}>{formatPrice(dp * item.qty)}</span>
-                  </div>
+            <div style={{ display:"flex", gap:9, marginTop:12 }}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{ flex:1, background:"#08101E", border:"1px solid #141928", borderRadius:12, overflow:"hidden", opacity:i===0?1:0.45, cursor:"pointer", aspectRatio:"1", transition:"opacity 0.2s" }} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=i===0?1:0.45}>
+                  <img src={product.image} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>{e.target.src=`https://placehold.co/200x200/0B0F1E/00C8F0?text=IMG`;}} />
                 </div>
-                <button onClick={() => onRemove(item.id)} style={{ background: "none", border: "none", color: "#888", fontSize: 18, cursor: "pointer", transition: "color 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "#E63946"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#888"; }}>✕</button>
-              </div>
-            );
-          })}
-        </div>
-        <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 20, minWidth: 240 }}>
-          <h3 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Order Summary</h3>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ color: "#888", fontSize: 14 }}>Items ({cart.reduce((s, i) => s + i.qty, 0)})</span>
-            <span style={{ fontSize: 14 }}>{formatPrice(total)}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ color: "#888", fontSize: 14 }}>Delivery</span>
-            <span style={{ fontSize: 14, color: "#22c55e" }}>FREE</span>
-          </div>
-          <div style={{ borderTop: "1px solid #222", paddingTop: 12, marginTop: 8, marginBottom: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontWeight: 600 }}>Total</span>
-              <span className="price-tag gradient-text" style={{ fontSize: 20 }}>{formatPrice(total)}</span>
+              ))}
             </div>
           </div>
-          <button className="btn-primary" style={{ width: "100%", padding: 13 }} onClick={onCheckout}>Proceed to Checkout →</button>
+          <div>
+            <p style={{ fontSize:11, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1.5, marginBottom:9 }}>{product.brand} • {CATEGORIES.find(c=>c.id===product.category)?.name}</p>
+            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:26, fontWeight:800, lineHeight:1.22, marginBottom:13, color:"#E2ECFF" }}>{product.name}</h1>
+            <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:14 }}>
+              <Stars rating={product.rating} size={15} />
+              <span style={{ fontSize:13, color:"#4E5F7A" }}>{product.rating} ({product.reviews} reviews)</span>
+            </div>
+            <p style={{ fontSize:13, color:"#5A6A80", lineHeight:1.7, marginBottom:18 }}>{product.desc}</p>
+            <div className="glass-card" style={{ padding:18, marginBottom:18, borderColor:"rgba(0,200,240,0.12)" }}>
+              <span className="badge badge-red" style={{ marginBottom:10, display:"inline-block" }}>-{product.discount}% OFF</span>
+              <div style={{ display:"flex", alignItems:"baseline", gap:12 }}>
+                <span className="price-tag" style={{ fontSize:35, background:"linear-gradient(135deg,#00C8F0,#6457FF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{fp(dp)}</span>
+                <span style={{ fontSize:14, color:"#2E4060", textDecoration:"line-through" }}>{fp(product.price)}</span>
+              </div>
+              <p style={{ fontSize:12, color:"#00D97A", marginTop:6 }}>You save {fp(product.price - dp)}</p>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
+              <p style={{ fontSize:13, color:"#4E5F7A" }}>Qty:</p>
+              <div style={{ display:"flex", alignItems:"center", background:"#090D1C", border:"1px solid #141928", borderRadius:9, overflow:"hidden" }}>
+                <button onClick={() => setQty(Math.max(1,qty-1))} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"8px 14px", fontSize:17, cursor:"pointer" }}>−</button>
+                <span style={{ padding:"0 12px", fontSize:14, fontWeight:700, color:"#00C8F0" }}>{qty}</span>
+                <button onClick={() => setQty(Math.min(product.stock,qty+1))} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"8px 14px", fontSize:17, cursor:"pointer" }}>+</button>
+              </div>
+              <span className={`badge ${product.stock>5?"badge-green":"badge-red"}`}>{product.stock>5?"✓ In Stock":`Only ${product.stock} left`}</span>
+            </div>
+            <div style={{ display:"flex", gap:9, marginBottom:18, flexWrap:"wrap" }}>
+              <button className="btn-primary" style={{ flex:"1 1 140px", padding:13, fontSize:14 }} onClick={() => onAddCart({...product,qty})}>🛒 Add to Cart</button>
+              <button onClick={() => onWishlist(product)} style={{ padding:"13px 16px", background:"#090D1C", border:`1px solid ${wishlisted?"#F03060":"#141928"}`, borderRadius:10, color:wishlisted?"#F03060":"#4E5F7A", fontSize:19, transition:"all 0.2s", cursor:"pointer" }}>{wishlisted?"❤️":"🤍"}</button>
+              <button onClick={() => onCompare(product)} style={{ padding:"13px 16px", background:inCompare?"rgba(0,128,238,0.1)":"#090D1C", border:`1px solid ${inCompare?"#00C8F0":"#141928"}`, borderRadius:10, color:inCompare?"#00C8F0":"#4E5F7A", fontSize:13, fontWeight:500, transition:"all 0.2s", cursor:"pointer" }}>⊞ Compare</button>
+            </div>
+            <div style={{ background:"#070B18", border:"1px solid #141928", borderRadius:13, padding:16 }}>
+              <p style={{ fontSize:11, fontWeight:700, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1.2, marginBottom:13 }}>Specifications</p>
+              {Object.entries(product.specs).map(([k,v]) => (
+                <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid #0C1220" }}>
+                  <span style={{ fontSize:12, color:"#4E5F7A", textTransform:"capitalize" }}>{k}</span>
+                  <span style={{ fontSize:12, fontWeight:500, color:"#C8D8F0" }}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+// ─── CART PAGE ────────────────────────────────────────────────────────────────
+function CartPage({ cart, onUpdateQty, onRemove, onCheckout, isLoggedIn, onLoginRequired }) {
+  const total = cart.reduce((s,i) => s + Math.round(i.price*(1-i.discount/100))*i.qty, 0);
+
+  if (!isLoggedIn) return (
+    <div style={{ textAlign:"center", padding:"80px 24px" }}>
+      <div style={{ fontSize:60, marginBottom:18 }}>🔐</div>
+      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:12 }}>Login Required</h2>
+      <p style={{ color:"#4E5F7A", marginBottom:24 }}>Please save your profile to view cart and place orders</p>
+      <button className="btn-primary" onClick={onLoginRequired} style={{ padding:"12px 32px" }}>Save Profile Now</button>
+    </div>
+  );
+
+  if (cart.length === 0) return (
+    <div style={{ textAlign:"center", padding:"80px 24px" }}>
+      <div style={{ fontSize:60, marginBottom:18 }}>🛒</div>
+      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:12 }}>Your Cart is Empty</h2>
+      <p style={{ color:"#4E5F7A" }}>Add some awesome products to get started!</p>
+    </div>
+  );
+
+  return (
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:26 }}>Shopping <span className="gradient-text">Cart</span></h1>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 270px", gap:22, alignItems:"start" }} className="grid-mobile-1">
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {cart.map(item => {
+              const dp = Math.round(item.price*(1-item.discount/100));
+              return (
+                <div key={item.id} className="glass-card" style={{ padding:14, display:"flex", gap:13, alignItems:"center" }}>
+                  <img src={item.image} alt={item.name} style={{ width:80, height:80, objectFit:"contain", borderRadius:10, border:"1px solid #141928", flexShrink:0, background:"#060A16", padding:4 }}
+                    onError={e=>{e.target.src=CAT_FALLBACK[item.category]||`https://placehold.co/200x200/0B0F1E/00C8F0?text=IMG`;}} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:13, fontWeight:500, color:"#C8D8F0", marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</p>
+                    <p style={{ fontSize:11, color:"#4E5F7A", marginBottom:8 }}>{item.brand}</p>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ display:"flex", alignItems:"center", background:"#070B18", border:"1px solid #141928", borderRadius:7, overflow:"hidden" }}>
+                        <button onClick={()=>onUpdateQty(item.id,item.qty-1)} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"4px 10px", cursor:"pointer", fontSize:15 }}>−</button>
+                        <span style={{ padding:"0 9px", fontSize:13, fontWeight:700, color:"#00C8F0" }}>{item.qty}</span>
+                        <button onClick={()=>onUpdateQty(item.id,item.qty+1)} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"4px 10px", cursor:"pointer", fontSize:15 }}>+</button>
+                      </div>
+                      <span className="price-tag" style={{ fontSize:15, color:"#00C8F0" }}>{fp(dp*item.qty)}</span>
+                    </div>
+                  </div>
+                  <button onClick={()=>onRemove(item.id)} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:18, cursor:"pointer", transition:"color 0.2s", flexShrink:0 }} onMouseEnter={e=>e.currentTarget.style.color="#F03060"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>✕</button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="glass-card" style={{ padding:20, borderColor:"rgba(0,200,240,0.12)" }}>
+            <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, marginBottom:16 }}>Order Summary</h3>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+              <span style={{ color:"#4E5F7A", fontSize:13 }}>Items ({cart.reduce((s,i)=>s+i.qty,0)})</span>
+              <span style={{ fontSize:13 }}>{fp(total)}</span>
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+              <span style={{ color:"#4E5F7A", fontSize:13 }}>Delivery</span>
+              <span style={{ fontSize:13, color:"#00D97A" }}>FREE</span>
+            </div>
+            <div style={{ borderTop:"1px solid #141928", paddingTop:12, marginTop:8, marginBottom:16 }}>
+              <div style={{ display:"flex", justifyContent:"space-between" }}>
+                <span style={{ fontWeight:600 }}>Total</span>
+                <span className="price-tag gradient-text" style={{ fontSize:20 }}>{fp(total)}</span>
+              </div>
+            </div>
+            <button className="btn-primary" style={{ width:"100%", padding:12, fontSize:14 }} onClick={onCheckout}>Proceed to Checkout →</button>
+            <div style={{ display:"flex", gap:6, justifyContent:"center", marginTop:12 }}>
+              {["🔒 Secure","📦 Free","↩️ 7-Day"].map(t=><span key={t} style={{ fontSize:10, color:"#2E3E58" }}>{t}</span>)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CHECKOUT ─────────────────────────────────────────────────────────────────
 function CheckoutPage({ cart, onPlaceOrder, onBack }) {
-  const [address, setAddress] = useState({ name: "", phone: "", line1: "", city: "Sirsi", state: "Karnataka", pin: "" });
+  const [address, setAddress] = useState({ name:"", phone:"", line1:"", city:"Sirsi", state:"Karnataka", pin:"" });
   const [payment, setPayment] = useState("upi");
   const [upiId, setUpiId] = useState("");
-  const total = cart.reduce((s, i) => s + Math.round(i.price * (1 - i.discount / 100)) * i.qty, 0);
+  const total = cart.reduce((s,i)=>s+Math.round(i.price*(1-i.discount/100))*i.qty, 0);
 
   const handle = () => {
-    if (!address.name || !address.phone || !address.line1 || !address.pin) { alert("Please fill all address fields"); return; }
-    if (payment === "upi" && !upiId) { alert("Please enter UPI ID"); return; }
+    if (!address.name||!address.phone||!address.line1||!address.pin) { alert("Please fill all address fields"); return; }
+    if (payment==="upi"&&!upiId) { alert("Please enter UPI ID"); return; }
     onPlaceOrder({ address, payment, total });
   };
 
   return (
-    <div className="page-enter" style={{ maxWidth: 860, margin: "0 auto", padding: "32px 24px" }}>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: "#888", fontSize: 14, cursor: "pointer", marginBottom: 24, display: "flex", alignItems: "center", gap: 6 }}>← Back to Cart</button>
-      <h1 className="section-title" style={{ marginBottom: 28 }}>Checkout</h1>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 24, alignItems: "start" }}>
-        <div>
-          <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 20, marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>📍 Delivery Address</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <input className="input-field" placeholder="Full name" value={address.name} onChange={(e) => setAddress((a) => ({ ...a, name: e.target.value }))} />
-              <input className="input-field" placeholder="Phone number" value={address.phone} onChange={(e) => setAddress((a) => ({ ...a, phone: e.target.value }))} />
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:13, cursor:"pointer", marginBottom:22, display:"flex", alignItems:"center", gap:5 }} onMouseEnter={e=>e.currentTarget.style.color="#00C8F0"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>← Back to Cart</button>
+        <h1 className="section-title" style={{ marginBottom:26 }}>Checkout</h1>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 260px", gap:22, alignItems:"start" }} className="grid-mobile-1">
+          <div>
+            <div className="glass-card" style={{ padding:20, marginBottom:14 }}>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>📍 Delivery Address</h3>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, marginBottom:9 }}>
+                <InputField icon="👤" placeholder="Full Name" value={address.name} onChange={e=>setAddress(a=>({...a,name:e.target.value}))} />
+                <InputField icon="📞" placeholder="Phone Number" value={address.phone} onChange={e=>setAddress(a=>({...a,phone:e.target.value}))} />
+              </div>
+              <InputField icon="🏠" placeholder="Address Line" value={address.line1} onChange={e=>setAddress(a=>({...a,line1:e.target.value}))} style={{ marginBottom:9 }} />
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:9 }}>
+                <InputField icon="🏙️" placeholder="City" value={address.city} onChange={e=>setAddress(a=>({...a,city:e.target.value}))} />
+                <InputField icon="🗺️" placeholder="State" value={address.state} onChange={e=>setAddress(a=>({...a,state:e.target.value}))} />
+                <InputField icon="📌" placeholder="PIN Code" value={address.pin} onChange={e=>setAddress(a=>({...a,pin:e.target.value}))} />
+              </div>
             </div>
-            <input className="input-field" placeholder="Address line 1" value={address.line1} onChange={(e) => setAddress((a) => ({ ...a, line1: e.target.value }))} style={{ marginTop: 10 }} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 10 }}>
-              <input className="input-field" value={address.city} onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))} placeholder="City" />
-              <input className="input-field" value={address.state} onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))} placeholder="State" />
-              <input className="input-field" placeholder="PIN code" value={address.pin} onChange={(e) => setAddress((a) => ({ ...a, pin: e.target.value }))} />
+            <div className="glass-card" style={{ padding:20 }}>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>💳 Payment Method</h3>
+              {[{id:"upi",label:"UPI Payment",icon:"📲",desc:"GPay, PhonePe, Paytm, BHIM"},{id:"cod",label:"Cash on Delivery",icon:"💵",desc:"Pay when order arrives"}].map(m => (
+                <div key={m.id} onClick={()=>setPayment(m.id)}
+                  style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 14px", background:payment===m.id?"rgba(0,128,238,0.07)":"#070B18", border:`1px solid ${payment===m.id?"#00C8F0":"#141928"}`, borderRadius:11, marginBottom:9, cursor:"pointer", transition:"all 0.2s" }}>
+                  <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${payment===m.id?"#00C8F0":"#3A4A60"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    {payment===m.id && <div style={{ width:9, height:9, background:"#00C8F0", borderRadius:"50%" }} />}
+                  </div>
+                  <span style={{ fontSize:18 }}>{m.icon}</span>
+                  <div>
+                    <p style={{ fontSize:13, fontWeight:600 }}>{m.label}</p>
+                    <p style={{ fontSize:11, color:"#4E5F7A" }}>{m.desc}</p>
+                  </div>
+                </div>
+              ))}
+              {payment==="upi" && <InputField icon="💸" placeholder="Enter UPI ID (e.g. name@upi)" value={upiId} onChange={e=>setUpiId(e.target.value)} style={{ marginTop:4 }} />}
             </div>
           </div>
-          <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>💳 Payment Method</h3>
-            {[{ id: "upi", label: "UPI Payment", icon: "📲", desc: "Pay via PhonePe, GPay, Paytm, etc." }, { id: "cod", label: "Cash on Delivery", icon: "💵", desc: "Pay when your order arrives" }].map((m) => (
-              <div key={m.id} onClick={() => setPayment(m.id)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: payment === m.id ? "rgba(230,57,70,0.08)" : "#0d0d0d", border: `1px solid ${payment === m.id ? "#E63946" : "#1a1a1a"}`, borderRadius: 10, marginBottom: 10, cursor: "pointer", transition: "all 0.2s" }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${payment === m.id ? "#E63946" : "#444"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {payment === m.id && <div style={{ width: 10, height: 10, background: "#E63946", borderRadius: "50%" }} />}
-                </div>
-                <span style={{ fontSize: 18 }}>{m.icon}</span>
-                <div>
-                  <p style={{ fontSize: 14, fontWeight: 600 }}>{m.label}</p>
-                  <p style={{ fontSize: 12, color: "#888" }}>{m.desc}</p>
-                </div>
+          <div className="glass-card" style={{ padding:20 }}>
+            <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, marginBottom:16 }}>Order Summary</h3>
+            {cart.map(i => (
+              <div key={i.id} style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                <span style={{ fontSize:12, color:"#4E5F7A", maxWidth:130, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{i.name} ×{i.qty}</span>
+                <span style={{ fontSize:12 }}>{fp(Math.round(i.price*(1-i.discount/100))*i.qty)}</span>
               </div>
             ))}
-            {payment === "upi" && (
-              <input className="input-field" placeholder="Enter UPI ID (e.g. name@upi)" value={upiId} onChange={(e) => setUpiId(e.target.value)} style={{ marginTop: 4 }} />
-            )}
-          </div>
-        </div>
-        <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 20, minWidth: 240 }}>
-          <h3 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Order Summary</h3>
-          {cart.map((i) => (
-            <div key={i.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: "#888", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.name} ×{i.qty}</span>
-              <span style={{ fontSize: 13 }}>{formatPrice(Math.round(i.price * (1 - i.discount / 100)) * i.qty)}</span>
+            <div style={{ borderTop:"1px solid #141928", paddingTop:12, marginTop:8, marginBottom:16 }}>
+              <div style={{ display:"flex", justifyContent:"space-between" }}>
+                <span style={{ fontWeight:600 }}>Total</span>
+                <span className="price-tag gradient-text" style={{ fontSize:19 }}>{fp(total)}</span>
+              </div>
             </div>
-          ))}
-          <div style={{ borderTop: "1px solid #222", paddingTop: 12, marginTop: 8, marginBottom: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontWeight: 600 }}>Total</span>
-              <span className="price-tag gradient-text" style={{ fontSize: 20 }}>{formatPrice(total)}</span>
-            </div>
+            <button className="btn-primary" style={{ width:"100%", padding:12, fontSize:14 }} onClick={handle}>Place Order ✓</button>
+            <p style={{ fontSize:10, color:"#2E3E58", textAlign:"center", marginTop:9 }}>🔒 Secure & encrypted checkout</p>
           </div>
-          <button className="btn-primary" style={{ width: "100%", padding: 13, fontSize: 15 }} onClick={handle}>Place Order ✓</button>
-          <p style={{ fontSize: 11, color: "#555", textAlign: "center", marginTop: 10 }}>Secure & encrypted checkout</p>
         </div>
       </div>
     </div>
   );
 }
 
+// ─── ORDER SUCCESS ─────────────────────────────────────────────────────────────
 function OrderSuccess({ order, onHome }) {
   return (
-    <div className="page-enter" style={{ textAlign: "center", padding: "80px 24px" }}>
-      <div style={{ fontSize: 80, animation: "successPop 0.5s ease", marginBottom: 20 }}>✅</div>
-      <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 32, fontWeight: 700, marginBottom: 8 }}>
-        <span className="gradient-text">Order Placed Successfully!</span>
-      </h2>
-      <p style={{ color: "#888", fontSize: 16, marginBottom: 8 }}>Thank you for shopping with Electronic Store</p>
-      <p style={{ color: "#888", fontSize: 14, marginBottom: 32 }}>Order Total: <span style={{ color: "#F0EDE8", fontWeight: 600 }}>{formatPrice(order.total)}</span> via <span style={{ color: "#F4A300", fontWeight: 600 }}>{order.payment === "upi" ? "UPI" : "Cash on Delivery"}</span></p>
-      <div style={{ background: "#111", border: "1px solid #222", borderRadius: 12, padding: 20, maxWidth: 400, margin: "0 auto 32px", textAlign: "left" }}>
-        <p style={{ fontSize: 12, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Delivery Address</p>
-        <p style={{ fontWeight: 500 }}>{order.address.name}</p>
-        <p style={{ color: "#888", fontSize: 14 }}>{order.address.line1}, {order.address.city}, {order.address.state} - {order.address.pin}</p>
-        <p style={{ color: "#888", fontSize: 14 }}>{order.address.phone}</p>
+    <div className="page-enter" style={{ padding:"72px 24px", width:"100%" }}>
+      <div style={{ textAlign:"center", maxWidth:560, margin:"0 auto" }}>
+      <div style={{ width:90, height:90, background:"rgba(0,217,122,0.1)", border:"1px solid rgba(0,217,122,0.28)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 24px", fontSize:42, animation:"successPop 0.5s cubic-bezier(0.22,1,0.36,1)" }}>✅</div>
+      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:32, fontWeight:800, marginBottom:9 }}><span className="gradient-text">Order Placed!</span></h2>
+      <p style={{ color:"#4E5F7A", fontSize:15, marginBottom:5 }}>Thank you for shopping with Electronic Store 🎉</p>
+      <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:32 }}>Total: <span style={{ color:"#00C8F0", fontWeight:700 }}>{fp(order.total)}</span> via <span style={{ color:"#FFB300", fontWeight:700 }}>{order.payment==="upi"?"UPI":"Cash on Delivery"}</span></p>
+      <div className="glass-card" style={{ padding:22, marginBottom:32, textAlign:"left" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
+          <div>
+            <p style={{ fontSize:11, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>Order ID</p>
+            <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#00C8F0" }}>#{String(order.id).slice(-8)}</p>
+          </div>
+          <div style={{ textAlign:"right" }}>
+            <p style={{ fontSize:11, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>Est. Delivery</p>
+            <p style={{ fontWeight:600, color:"#00D97A" }}>3–5 Business Days</p>
+          </div>
+        </div>
+        <div style={{ borderTop:"1px solid #141928", paddingTop:12 }}>
+          <p style={{ fontSize:11, color:"#4E5F7A", marginBottom:5 }}>Delivering to:</p>
+          <p style={{ fontWeight:500, color:"#C8D8F0" }}>{order.address.name}</p>
+          <p style={{ color:"#4E5F7A", fontSize:12 }}>{order.address.line1}, {order.address.city}, {order.address.state} — {order.address.pin}</p>
+        </div>
       </div>
-      <button className="btn-primary" onClick={onHome} style={{ padding: "14px 32px", fontSize: 15 }}>Continue Shopping →</button>
+      <button className="btn-primary" onClick={onHome} style={{ padding:"13px 34px", fontSize:15 }}>Continue Shopping →</button>
+      </div>
     </div>
   );
 }
 
+// ─── COMPARE ──────────────────────────────────────────────────────────────────
 function ComparePage({ compareList, onRemove, onAddCart }) {
-  if (compareList.length === 0) {
-    return (
-      <div style={{ textAlign: "center", padding: "80px 24px" }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>⊞</div>
-        <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 24, marginBottom: 12 }}>Nothing to Compare</h2>
-        <p style={{ color: "#888" }}>Add products using the compare button on product cards</p>
-      </div>
-    );
-  }
-  const allSpecKeys = [...new Set(compareList.flatMap((p) => Object.keys(p.specs)))];
+  if (compareList.length === 0) return (
+    <div style={{ textAlign:"center", padding:"72px 24px" }}>
+      <div style={{ fontSize:60, marginBottom:14 }}>⊞</div>
+      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:10 }}>Nothing to Compare</h2>
+      <p style={{ color:"#4E5F7A" }}>Add products using the compare button on product cards</p>
+    </div>
+  );
+  const allKeys = [...new Set(compareList.flatMap(p => Object.keys(p.specs)))];
   return (
-    <div className="page-enter" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px", overflowX: "auto" }}>
-      <h1 className="section-title" style={{ marginBottom: 28 }}>Compare <span className="gradient-text">Products</span></h1>
-      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 500 }}>
-        <thead>
-          <tr>
-            <th style={{ padding: "12px 16px", background: "#0d0d0d", color: "#888", fontSize: 13, textAlign: "left", width: 140 }}>Feature</th>
-            {compareList.map((p) => (
-              <th key={p.id} style={{ padding: "12px 16px", background: "#111", border: "1px solid #1a1a1a", textAlign: "center" }}>
-                <img src={p.image} alt={p.name} style={{ width: "100%", maxWidth: 120, height: 90, objectFit: "cover", borderRadius: 8, marginBottom: 8 }} onError={(e) => { e.target.src = `https://via.placeholder.com/200x150/111/333?text=IMG`; }} />
-                <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{p.name}</p>
-                <p className="price-tag gradient-text" style={{ fontSize: 16 }}>{formatPrice(Math.round(p.price * (1 - p.discount / 100)))}</p>
-                <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 8 }}>
-                  <button className="btn-primary" style={{ fontSize: 11, padding: "6px 12px" }} onClick={() => onAddCart(p)}>Add to Cart</button>
-                  <button onClick={() => onRemove(p.id)} style={{ background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#888", fontSize: 11, padding: "6px 10px", borderRadius: 6, cursor: "pointer" }}>Remove</button>
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {[
-            ["Brand", (p) => p.brand],
-            ["Rating", (p) => `${p.rating} ⭐ (${p.reviews} reviews)`],
-            ["Stock", (p) => p.stock > 5 ? "In Stock" : `${p.stock} left`],
-            ...allSpecKeys.map((k) => [k.charAt(0).toUpperCase() + k.slice(1), (p) => p.specs[k] || "—"]),
-          ].map(([label, fn], ri) => (
-            <tr key={label} style={{ background: ri % 2 === 0 ? "#0d0d0d" : "transparent" }}>
-              <td style={{ padding: "11px 16px", color: "#888", fontSize: 13 }}>{label}</td>
-              {compareList.map((p) => (
-                <td key={p.id} style={{ padding: "11px 16px", border: "1px solid #1a1a1a", fontSize: 13, textAlign: "center" }}>{fn(p)}</td>
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0", overflowX:"auto" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:26 }}>Compare <span className="gradient-text">Products</span></h1>
+        <table style={{ width:"100%", borderCollapse:"collapse", minWidth:480 }}>
+          <thead>
+            <tr>
+              <th style={{ padding:"12px 16px", background:"#070B18", color:"#4E5F7A", fontSize:12, textAlign:"left", width:140 }}>Feature</th>
+              {compareList.map(p => (
+                <th key={p.id} style={{ padding:"12px 16px", background:"#0B0F1E", border:"1px solid #141928", textAlign:"center" }}>
+                  <img src={p.image} alt={p.name} style={{ width:"100%", maxWidth:120, height:82, objectFit:"contain", borderRadius:9, marginBottom:9, background:"#060A16", padding:4 }} onError={e=>{e.target.src=CAT_FALLBACK[p.category]||`https://placehold.co/200x150/0B0F1E/00C8F0?text=IMG`;}} />
+                  <p style={{ fontSize:12, fontWeight:500, marginBottom:4, color:"#C8D8F0" }}>{p.name}</p>
+                  <p className="price-tag gradient-text" style={{ fontSize:15, marginBottom:7 }}>{fp(Math.round(p.price*(1-p.discount/100)))}</p>
+                  <div style={{ display:"flex", gap:5, justifyContent:"center" }}>
+                    <button className="btn-primary" style={{ fontSize:10, padding:"6px 10px" }} onClick={()=>onAddCart(p)}>Add to Cart</button>
+                    <button onClick={()=>onRemove(p.id)} style={{ background:"#070B18", border:"1px solid #141928", color:"#4E5F7A", fontSize:10, padding:"6px 9px", borderRadius:7, cursor:"pointer" }}>Remove</button>
+                  </div>
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {[["Brand",p=>p.brand],["Rating",p=>`${p.rating} ⭐ (${p.reviews})`],["Stock",p=>p.stock>5?"In Stock":`${p.stock} left`],
+              ...allKeys.map(k=>[k.charAt(0).toUpperCase()+k.slice(1), p=>p.specs[k]||"—"])
+            ].map(([label,fn],ri) => (
+              <tr key={label} style={{ background:ri%2===0?"#070B18":"transparent" }}>
+                <td style={{ padding:"10px 16px", color:"#4E5F7A", fontSize:12 }}>{label}</td>
+                {compareList.map(p => (
+                  <td key={p.id} style={{ padding:"10px 16px", border:"1px solid #0D1420", fontSize:12, textAlign:"center", color:"#C8D8F0" }}>{fn(p)}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
+// ─── DEALS PAGE ───────────────────────────────────────────────────────────────
 function DealsPage({ products, onAddCart, onView }) {
   return (
-    <div className="page-enter" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 className="section-title" style={{ marginBottom: 8 }}>⚡ Flash <span className="gradient-text">Deals</span></h1>
-      <p style={{ color: "#888", fontSize: 14, marginBottom: 32 }}>Limited-time offers — don't miss out!</p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 16 }}>
-        {DEALS.map((deal) => {
-          const savings = deal.price - deal.dealPrice;
-          return (
-            <div key={deal.id} className="card-product" onClick={() => onView(deal)} style={{ cursor: "pointer" }}>
-              <div style={{ position: "relative" }}>
-                <img src={deal.image} alt={deal.name} style={{ width: "100%", height: 200, objectFit: "cover" }} onError={(e) => { e.target.src = `https://via.placeholder.com/400x300/111/333?text=IMG`; }} />
-                <div style={{ position: "absolute", top: 10, left: 10, background: "linear-gradient(135deg,#E63946,#F4A300)", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>-{deal.discount}% OFF</div>
-              </div>
-              <div style={{ padding: "16px 16px 18px" }}>
-                <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{deal.name}</p>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
-                  <span className="price-tag" style={{ fontSize: 22, color: "#E63946" }}>{formatPrice(deal.dealPrice)}</span>
-                  <span style={{ fontSize: 13, color: "#555", textDecoration: "line-through" }}>{formatPrice(deal.price)}</span>
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:7 }}>⚡ Flash <span className="gradient-text">Deals</span></h1>
+        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:34 }}>Limited-time offers — prices drop at midnight!</p>
+        <div className="product-grid">
+          {DEALS_DATA.map(deal => {
+            const savings = deal.price - deal.dealPrice;
+            return (
+              <div key={deal.id} className="card-product" onClick={()=>onView(deal)} style={{ cursor:"pointer", borderColor:"rgba(240,48,96,0.2)" }}>
+                <div className="card-img-wrap">
+                  <img src={deal.image} alt={deal.name} loading="lazy"
+                    onError={e=>{e.target.src=CAT_FALLBACK[deal.category]||`https://placehold.co/600x600/0B0F1E/F03060?text=Deal`;}} />
+                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,7,15,0.65) 0%, transparent 50%)", pointerEvents:"none" }} />
+                  <div style={{ position:"absolute", top:10, left:10, background:"linear-gradient(135deg,#F03060,#FF6B35)", color:"#fff", borderRadius:7, padding:"4px 10px", fontSize:11, fontWeight:800 }}>-{deal.discount+5}% OFF</div>
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"5px 12px" }}>
+                    <p style={{ fontSize:10, fontWeight:700, color:"#F03060", textTransform:"uppercase", letterSpacing:1.2 }}>{deal.brand}</p>
+                  </div>
                 </div>
-                <p style={{ fontSize: 12, color: "#22c55e", marginBottom: 12 }}>Save {formatPrice(savings)}!</p>
-                <div style={{ marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>Offer ends in:</p>
-                  <CountdownTimer endTime={deal.endTime} />
+                <div className="card-body">
+                  <p style={{ fontSize:13, fontWeight:600, color:"#C8D8F0", marginBottom:7, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{deal.name}</p>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:9, marginBottom:7 }}>
+                    <span className="price-tag" style={{ fontSize:22, color:"#F03060" }}>{fp(deal.dealPrice)}</span>
+                    <span style={{ fontSize:11, color:"#2E4060", textDecoration:"line-through" }}>{fp(deal.price)}</span>
+                  </div>
+                  <p style={{ fontSize:11, color:"#00D97A", marginBottom:10 }}>You save {fp(savings)}!</p>
+                  <div style={{ marginTop:"auto" }}>
+                    <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:6 }}>Offer ends in:</p>
+                    <CountdownTimer endTime={deal.endTime} />
+                  </div>
+                  <button className="btn-primary" style={{ width:"100%", padding:10, marginTop:12, fontSize:13 }} onClick={e=>{e.stopPropagation();onAddCart(deal);}}>Add to Cart</button>
                 </div>
-                <button className="btn-primary" style={{ width: "100%" }} onClick={(e) => { e.stopPropagation(); onAddCart(deal); }}>Add to Cart</button>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
 
+// ─── BRANDS PAGE ──────────────────────────────────────────────────────────────
 function BrandsPage({ products, onCategoryClick }) {
-  const [filter, setFilter] = useState("");
-  const filtered = BRANDS.filter((b) => !filter || b.country === filter);
-  const countries = [...new Set(BRANDS.map((b) => b.country))];
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [filter, setFilter] = useState("All");
+  const countries = ["All","India","USA","South Korea","Japan","China"];
+  const filteredBrands = filter === "All" ? BRANDS : BRANDS.filter(b => b.country === filter);
+  const brandProducts = selectedBrand ? products.filter(p => p.brand.toLowerCase() === selectedBrand.toLowerCase()) : [];
 
   return (
-    <div className="page-enter" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 className="section-title" style={{ marginBottom: 8 }}>Our <span className="gradient-text">Brands</span></h1>
-      <p style={{ color: "#888", fontSize: 14, marginBottom: 24 }}>We carry the world's best electronics brands</p>
-      <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
-        <button onClick={() => setFilter("")} className="badge" style={{ padding: "6px 14px", cursor: "pointer", background: !filter ? "linear-gradient(135deg,#E63946,#F4A300)" : "#1a1a1a", color: !filter ? "#fff" : "#888", border: `1px solid ${!filter ? "transparent" : "#2a2a2a"}`, borderRadius: 6, fontSize: 13 }}>All</button>
-        {countries.map((c) => (
-          <button key={c} onClick={() => setFilter(c)} className="badge" style={{ padding: "6px 14px", cursor: "pointer", background: filter === c ? "linear-gradient(135deg,#E63946,#F4A300)" : "#1a1a1a", color: filter === c ? "#fff" : "#888", border: `1px solid ${filter === c ? "transparent" : "#2a2a2a"}`, borderRadius: 6, fontSize: 13 }}>{c}</button>
-        ))}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 14 }}>
-        {filtered.map((brand) => {
-          const count = products.filter((p) => p.brand === brand.name).length;
-          return (
-            <div key={brand.id} style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: "24px 16px", textAlign: "center", cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#E63946"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a1a"; e.currentTarget.style.transform = "translateY(0)"; }}>
-              <div style={{ width: 56, height: 56, background: "linear-gradient(135deg,#1a1a1a,#222)", border: "1px solid #2a2a2a", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: 16, color: "#F0EDE8" }}>{brand.logo}</div>
-              <p style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{brand.name}</p>
-              <p style={{ fontSize: 12, color: "#888", marginBottom: 6 }}>{brand.country}</p>
-              {count > 0 && <span className="badge badge-gold">{count} products</span>}
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:7 }}>Our <span className="gradient-text">Brands</span></h1>
+        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:22 }}>Authorized dealer for world's best electronics brands</p>
+        <div style={{ display:"flex", gap:8, marginBottom:26, flexWrap:"wrap" }}>
+          {countries.map(c => (
+            <button key={c} onClick={()=>{ setFilter(c); setSelectedBrand(null); }}
+              style={{ padding:"6px 15px", background:filter===c?"linear-gradient(135deg,#0080EE,#6457FF)":"#0B0F1E", border:`1px solid ${filter===c?"transparent":"#141928"}`, color:filter===c?"#fff":"#6A7E9C", borderRadius:8, fontSize:12, fontWeight:500, cursor:"pointer", transition:"all 0.2s", boxShadow:filter===c?"0 3px 12px rgba(0,128,238,0.28)":"none" }}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:12, marginBottom:selectedBrand?32:0 }}>
+          {filteredBrands.map(brand => {
+            const count = products.filter(p => p.brand === brand.name).length;
+            const isSel = selectedBrand === brand.name;
+            return (
+              <div key={brand.id} className="brand-card" onClick={() => setSelectedBrand(isSel?null:brand.name)}
+                style={{ border:`1px solid ${isSel?brand.color:"#141928"}`, background:isSel?`${brand.color}0D`:"#0B0F1E" }}>
+                <div style={{ width:50, height:50, background:`${brand.color}18`, border:`1px solid ${brand.color}30`, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:14, color:brand.color }}>{brand.logo}</div>
+                <p style={{ fontWeight:700, fontSize:13, marginBottom:3, color:"#C8D8F0" }}>{brand.name}</p>
+                <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:6 }}>{brand.country}</p>
+                {count > 0 && <span className="badge badge-blue" style={{ fontSize:9 }}>{count} products</span>}
+                {isSel && <p style={{ fontSize:10, color:"#00C8F0", marginTop:7, fontWeight:600 }}>▲ Viewing</p>}
+              </div>
+            );
+          })}
+        </div>
+        {selectedBrand && brandProducts.length > 0 && (
+          <div style={{ animation:"fadeInUp 0.35s ease" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+              <h2 className="section-title" style={{ fontSize:22 }}><span className="gradient-text">{selectedBrand}</span> Products</h2>
+              <span className="badge badge-blue">{brandProducts.length} items</span>
+              <button onClick={()=>setSelectedBrand(null)} className="btn-secondary" style={{ marginLeft:"auto", fontSize:11, padding:"6px 12px" }}>✕ Close</button>
             </div>
-          );
-        })}
+            <div className="product-grid">
+              {brandProducts.map(p => (
+                <div key={p.id} className="card-product">
+                  <div className="card-img-wrap">
+                    <img src={p.image} alt={p.name} onError={e=>{e.target.src=CAT_FALLBACK[p.category]||`https://placehold.co/600x600/0B0F1E/00C8F0?text=IMG`;}} />
+                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,7,15,0.65) 0%, transparent 50%)", pointerEvents:"none" }} />
+                    <span className="badge badge-purple" style={{ position:"absolute", top:10, left:10 }}>-{p.discount}%</span>
+                  </div>
+                  <div className="card-body">
+                    <p style={{ fontSize:10, fontWeight:700, color:"#00C8F0", textTransform:"uppercase", letterSpacing:1, marginBottom:5 }}>{p.brand}</p>
+                    <p style={{ fontSize:13, fontWeight:600, color:"#C8D8F0", marginBottom:5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{p.name}</p>
+                    <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
+                      <Stars rating={p.rating} size={11} />
+                      <span style={{ fontSize:10, color:"#4E5F7A" }}>{p.rating}</span>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"baseline", gap:7 }}>
+                      <span className="price-tag" style={{ fontSize:16, color:"#00C8F0" }}>{fp(Math.round(p.price*(1-p.discount/100)))}</span>
+                      <span style={{ fontSize:10, color:"#2E4060", textDecoration:"line-through" }}>{fp(p.price)}</span>
+                    </div>
+                    <span className={`badge ${p.stock>5?"badge-green":"badge-red"}`} style={{ marginTop:8, display:"inline-block" }}>{p.stock>5?"In Stock":`${p.stock} left`}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {selectedBrand && brandProducts.length === 0 && (
+          <div style={{ textAlign:"center", padding:"36px", color:"#4E5F7A" }}>No products found for {selectedBrand}.</div>
+        )}
       </div>
     </div>
   );
 }
 
+// ─── HELP PAGE ────────────────────────────────────────────────────────────────
+function HelpPage() {
+  const [openIdx, setOpenIdx] = useState(null);
+  return (
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:7 }}>Help & <span className="gradient-text">FAQ</span></h1>
+        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:32 }}>Find answers to commonly asked questions</p>
+        <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+          {FAQ_DATA.map((faq,i) => (
+            <div key={i} className="faq-item" style={{ background:openIdx===i?"rgba(0,128,238,0.04)":"transparent", borderRadius:openIdx===i?11:0 }}>
+              <button onClick={() => setOpenIdx(openIdx===i?null:i)}
+                style={{ width:"100%", background:"none", border:"none", padding:"16px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer", color:openIdx===i?"#00C8F0":"#C8D8F0", textAlign:"left", gap:14 }}>
+                <span style={{ fontSize:14, fontWeight:600, flex:1 }}>{faq.q}</span>
+                <span style={{ fontSize:18, color:openIdx===i?"#0080EE":"#4E5F7A", transition:"transform 0.28s", transform:openIdx===i?"rotate(180deg)":"rotate(0deg)", flexShrink:0 }}>⌄</span>
+              </button>
+              <div style={{ maxHeight:openIdx===i?"400px":0, opacity:openIdx===i?1:0, overflow:"hidden", transition:"max-height 0.35s ease, opacity 0.28s ease" }}>
+                <p style={{ padding:"0 18px 16px", fontSize:13, color:"#5A6A80", lineHeight:1.75 }}>{faq.a}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="glass-card" style={{ padding:26, marginTop:36, textAlign:"center" }}>
+          <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:19, fontWeight:700, marginBottom:9 }}>Still need help?</h3>
+          <p style={{ color:"#4E5F7A", marginBottom:18, fontSize:13 }}>Our support team is available Mon–Sat, 9AM–7PM</p>
+          <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
+            <a href="tel:11112345555" style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.22)", borderRadius:9, color:"#00C8F0", fontSize:13, fontWeight:500 }}>📞 111 1234 5555</a>
+            <a href="mailto:electronicstore@gmail.com" style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.22)", borderRadius:9, color:"#00C8F0", fontSize:13, fontWeight:500 }}>✉️ Email Us</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CONTACT PAGE ─────────────────────────────────────────────────────────────
 function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [form, setForm] = useState({ name:"", email:"", message:"" });
   const [sent, setSent] = useState(false);
-  const handle = () => { if (form.name && form.email && form.message) { setSent(true); setTimeout(() => setSent(false), 3000); setForm({ name: "", email: "", message: "" }); } };
+  const handle = () => {
+    if (form.name && form.email && form.message) {
+      setSent(true);
+      setTimeout(() => { setSent(false); setForm({ name:"", email:"", message:"" }); }, 4000);
+    }
+  };
+  return (
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:7 }}>Get in <span className="gradient-text">Touch</span></h1>
+        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:32 }}>We'd love to hear from you. Send us a message!</p>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }} className="grid-mobile-1">
+          <div>
+            <div className="glass-card" style={{ padding:26, marginBottom:18 }}>
+              <h3 style={{ fontSize:15, fontWeight:700, marginBottom:20, color:"#C8D8F0" }}>Send a Message</h3>
+              <InputField icon="👤" placeholder="Your Name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={{ marginBottom:10 }} />
+              <InputField icon="✉️" type="email" placeholder="Email Address" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} style={{ marginBottom:10 }} />
+              <div style={{ position:"relative", marginBottom:14 }}>
+                <span style={{ position:"absolute", left:12, top:12, fontSize:14, opacity:0.4, zIndex:1 }}>💬</span>
+                <textarea className="input-premium" placeholder="Your message…" rows={4} value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))} style={{ resize:"vertical", paddingTop:10 }} />
+              </div>
+              {sent ? (
+                <div style={{ padding:"12px 16px", background:"rgba(0,217,122,0.08)", border:"1px solid rgba(0,217,122,0.22)", borderRadius:9, color:"#00D97A", fontSize:13, fontWeight:600 }}>✓ Message sent! We'll reply within 24 hours.</div>
+              ) : (
+                <button className="btn-primary" style={{ width:"100%", padding:12, fontSize:14 }} onClick={handle}>Send Message →</button>
+              )}
+            </div>
+            <div className="glass-card" style={{ padding:20 }}>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>Store Information</h3>
+              {[["📍","Address","Electronic Store, Sirsi, Uttara Kannada, Karnataka, 581355"],["📞","Phone","111 1234 5555"],["📧","Email","electronicstore@gmail.com"],["🕐","Hours","Mon–Sat: 9:00 AM – 7:00 PM"]].map(([ic,label,val]) => (
+                <div key={label} style={{ display:"flex", gap:10, marginBottom:12, alignItems:"flex-start" }}>
+                  <div style={{ width:34, height:34, background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, flexShrink:0 }}>{ic}</div>
+                  <div>
+                    <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:1, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8 }}>{label}</p>
+                    <p style={{ fontSize:12, color:"#B0C4DE" }}>{val}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+            <div className="glass-card" style={{ overflow:"hidden", flex:1 }}>
+              <div style={{ background:"linear-gradient(135deg,#050D1A,#091525)", padding:"13px 16px", display:"flex", alignItems:"center", gap:9 }}>
+                <span style={{ fontSize:15 }}>🗺️</span>
+                <span style={{ fontSize:12, fontWeight:700, color:"#C8D8F0" }}>Store Location — Sirsi, Karnataka</span>
+              </div>
+              <iframe src="https://maps.google.com/maps?q=Sirsi,Karnataka,India&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                width="100%" height="300" style={{ border:0, display:"block" }}
+                allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Store Location" />
+              <div style={{ padding:"12px 16px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <p style={{ fontSize:12, color:"#4E5F7A" }}>Sirsi, Uttara Kannada, Karnataka</p>
+                <a href="https://maps.google.com/?q=Sirsi,Karnataka" target="_blank" rel="noreferrer" style={{ fontSize:11, color:"#00C8F0", fontWeight:600 }}>Open Maps →</a>
+              </div>
+            </div>
+            <div className="glass-card" style={{ padding:20 }}>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:14, color:"#C8D8F0" }}>Quick Feedback</h3>
+              <textarea className="input-premium" rows={3} placeholder="Share your feedback…" style={{ marginBottom:10, paddingLeft:13 }} />
+              <button className="btn-primary" style={{ width:"100%", padding:10 }}>Submit Feedback</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── WISHLIST ─────────────────────────────────────────────────────────────────
+function WishlistPage({ wishlist, onRemove, onAddCart, onView }) {
+  if (wishlist.length === 0) return (
+    <div style={{ textAlign:"center", padding:"72px 24px" }}>
+      <div style={{ fontSize:58, marginBottom:14 }}>🤍</div>
+      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:10 }}>Wishlist is Empty</h2>
+      <p style={{ color:"#4E5F7A" }}>Save your favourite products here!</p>
+    </div>
+  );
+  return (
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:26 }}>My <span className="gradient-text">Wishlist</span> ({wishlist.length})</h1>
+        <div className="product-grid">
+          {wishlist.map(p => <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onRemove} onCompare={()=>{}} onView={onView} wishlisted={true} inCompare={false} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROFILE ──────────────────────────────────────────────────────────────────
+function ProfilePage({ user, onSave, orders }) {
+  const [form, setForm] = useState({ fullName:user?.name||"", address:user?.address||"", mobile:user?.mobile||"", email:user?.email||"", pincode:user?.pincode||"", state:user?.state||"", mobile2:user?.mobile2||"" });
+  const [saved, setSaved] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const confirmSave = () => {
+    onSave({ ...form, name:form.fullName });
+    setShowConfirm(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const fields = [
+    { icon:"👤", key:"fullName",  label:"Full Name",                type:"text",  required:true  },
+    { icon:"🏠", key:"address",   label:"Full Address",             type:"text",  required:true  },
+    { icon:"📞", key:"mobile",    label:"Mobile Number",            type:"tel",   required:true  },
+    { icon:"✉️", key:"email",     label:"Email Address",            type:"email", required:true  },
+    { icon:"📌", key:"pincode",   label:"Pin Code",                 type:"text",  required:true  },
+    { icon:"🗺️", key:"state",     label:"State",                    type:"text",  required:true  },
+    { icon:"📱", key:"mobile2",   label:"Second Mobile (Optional)", type:"tel",   required:false },
+  ];
 
   return (
-    <div className="page-enter" style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 className="section-title" style={{ marginBottom: 8 }}>Get in <span className="gradient-text">Touch</span></h1>
-      <p style={{ color: "#888", fontSize: 14, marginBottom: 36 }}>We'd love to hear from you. Send us a message!</p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
-        <div>
-          <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 24 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Send a Message</h3>
-            <input className="input-field" placeholder="Your name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} style={{ marginBottom: 12 }} />
-            <input className="input-field" placeholder="Email address" type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} style={{ marginBottom: 12 }} />
-            <textarea className="input-field" placeholder="Your message…" rows={4} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} style={{ resize: "vertical", marginBottom: 14 }} />
-            {sent ? (
-              <div style={{ padding: "12px 16px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8, color: "#22c55e", fontSize: 14, fontWeight: 500 }}>✓ Message sent! We'll reply soon.</div>
+    <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
+      <div className="section-wrap">
+        <h1 className="section-title" style={{ marginBottom:26 }}>My <span className="gradient-text">Profile</span></h1>
+        <div className="glass-card" style={{ padding:22, marginBottom:24 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:18, marginBottom:20 }}>
+            <div style={{ width:68, height:68, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, fontWeight:800, flexShrink:0 }}>
+              {form.fullName ? form.fullName[0].toUpperCase() : "?"}
+            </div>
+            <div>
+              <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#E2ECFF" }}>{form.fullName||"Your Name"}</h2>
+              <p style={{ color:"#4E5F7A", fontSize:13, marginTop:2 }}>📞 {form.mobile||"Add mobile number"}</p>
+            </div>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+            {[["📦",orders.length,"Orders"],["❤️","—","Wishlist"],["⭐","4.8","Rating"]].map(([ic,val,label]) => (
+              <div key={label} style={{ background:"#070B18", borderRadius:11, padding:"12px 14px", textAlign:"center" }}>
+                <span style={{ fontSize:18 }}>{ic}</span>
+                <p className="price-tag" style={{ fontSize:20, marginTop:5, color:"#00C8F0" }}>{val}</p>
+                <p style={{ fontSize:11, color:"#4E5F7A" }}>{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="glass-card" style={{ padding:26, marginBottom:22 }}>
+          <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, marginBottom:22, color:"#C8D8F0" }}>Profile Details</h3>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+            {fields.map(f => (
+              <InputField key={f.key} icon={f.icon} type={f.type} placeholder={f.label}
+                value={form[f.key]} onChange={e => setForm(prev => ({ ...prev, [f.key]:e.target.value }))}
+                required={f.required} style={{ gridColumn:f.key==="address"?"1 / -1":"auto" }} />
+            ))}
+          </div>
+          <div style={{ marginTop:20 }}>
+            {saved ? (
+              <div style={{ padding:"12px 16px", background:"rgba(0,217,122,0.08)", border:"1px solid rgba(0,217,122,0.22)", borderRadius:9, color:"#00D97A", fontSize:13, fontWeight:600 }}>✓ Profile saved successfully!</div>
             ) : (
-              <button className="btn-primary" style={{ width: "100%", padding: 13 }} onClick={handle}>Send Message →</button>
+              <button className="btn-primary" style={{ padding:"12px 26px", fontSize:14, minWidth:180 }} onClick={() => setShowConfirm(true)}>💾 Save Profile</button>
             )}
           </div>
         </div>
-        <div>
-          <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 24, marginBottom: 16 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Store Information</h3>
-            {[
-              ["📍", "Address", "Electronic Store, Sirsi, Uttara Kannada, Karnataka, 581355"],
-              ["📞", "Phone", "111 1234 5555"],
-              ["📧", "Email", "electronicstore@gmail.com"],
-              ["📸", "Instagram", "@electronic_store"],
-              ["📘", "Facebook", "Electronic Store"],
-            ].map(([icon, label, value]) => (
-              <div key={label} style={{ display: "flex", gap: 12, marginBottom: 14, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 18, minWidth: 24 }}>{icon}</span>
-                <div>
-                  <p style={{ fontSize: 12, color: "#888", marginBottom: 2 }}>{label}</p>
-                  <p style={{ fontSize: 14 }}>{value}</p>
+        {orders.length > 0 && (
+          <div>
+            <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:19, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>Recent Orders</h3>
+            {orders.map((o,i) => (
+              <div key={i} className="glass-card" style={{ padding:16, marginBottom:9 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
+                  <span style={{ fontSize:12, color:"#4E5F7A" }}>Order #{String(i+1).padStart(4,"0")}</span>
+                  <span className="badge badge-green">✓ Placed</span>
+                </div>
+                <p style={{ fontSize:13, fontWeight:500, marginBottom:4, color:"#C8D8F0" }}>{o.items?.length||0} item(s)</p>
+                <div style={{ display:"flex", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:12, color:"#4E5F7A" }}>{o.payment==="upi"?"UPI":"Cash on Delivery"}</span>
+                  <span className="price-tag" style={{ fontSize:15, color:"#00C8F0" }}>{fp(o.total)}</span>
                 </div>
               </div>
             ))}
           </div>
-          <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, overflow: "hidden" }}>
-            <div style={{ background: "#0d0d0d", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-              <span>🗺️</span>
-              <span style={{ fontSize: 13, fontWeight: 500 }}>Store Location — Sirsi, Karnataka</span>
-            </div>
-            <div style={{ height: 200, background: "linear-gradient(135deg,#0d0d0d,#111)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, border: "1px solid #1a1a1a" }}>
-              <span style={{ fontSize: 36 }}>📍</span>
-              <p style={{ fontSize: 13, color: "#888" }}>Sirsi, Uttara Kannada, Karnataka</p>
-              <a href="https://maps.google.com/?q=Sirsi,+Karnataka" target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "#E63946", textDecoration: "underline" }}>Open in Google Maps →</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WishlistPage({ wishlist, onRemove, onAddCart, onView }) {
-  if (wishlist.length === 0) {
-    return (
-      <div style={{ textAlign: "center", padding: "80px 24px" }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>🤍</div>
-        <h2 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 24, marginBottom: 12 }}>Wishlist is Empty</h2>
-        <p style={{ color: "#888" }}>Save your favourite products here!</p>
-      </div>
-    );
-  }
-  return (
-    <div className="page-enter" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 className="section-title" style={{ marginBottom: 28 }}>My <span className="gradient-text">Wishlist</span> ({wishlist.length})</h1>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(230px,1fr))", gap: 16 }}>
-        {wishlist.map((p) => (
-          <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onRemove} onCompare={() => {}} onView={onView} wishlisted={true} inCompare={false} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProfilePage({ user, orders }) {
-  return (
-    <div className="page-enter" style={{ maxWidth: 800, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 className="section-title" style={{ marginBottom: 28 }}>My <span className="gradient-text">Profile</span></h1>
-      <div style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 16, padding: 28, marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
-          <div style={{ width: 68, height: 68, background: "linear-gradient(135deg,#E63946,#F4A300)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700 }}>{user.name[0].toUpperCase()}</div>
-          <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600 }}>{user.name}</h2>
-            <p style={{ color: "#888", fontSize: 14 }}>📞 {user.mobile}</p>
-          </div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
-          {[["📦", orders.length, "Orders"], ["❤️", "—", "Wishlist"], ["⭐", "4.8", "Rating"]].map(([icon, val, label]) => (
-            <div key={label} style={{ background: "#0d0d0d", borderRadius: 10, padding: "14px 16px", textAlign: "center" }}>
-              <span style={{ fontSize: 20 }}>{icon}</span>
-              <p className="price-tag" style={{ fontSize: 22, marginTop: 6 }}>{val}</p>
-              <p style={{ fontSize: 12, color: "#888" }}>{label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-      {orders.length > 0 && (
-        <div>
-          <h3 style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Recent Orders</h3>
-          {orders.map((o, i) => (
-            <div key={i} style={{ background: "#111", border: "1px solid #1a1a1a", borderRadius: 12, padding: 16, marginBottom: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 13, color: "#888" }}>Order #{String(i + 1).padStart(4, "0")}</span>
-                <span className="badge badge-green">Placed</span>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>{o.items?.length || 0} item(s)</p>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 13, color: "#888" }}>Payment: {o.payment === "upi" ? "UPI" : "COD"}</span>
-                <span className="price-tag" style={{ fontSize: 16 }}>{formatPrice(o.total)}</span>
+        )}
+        {showConfirm && (
+          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:5000, display:"flex", alignItems:"center", justifyContent:"center", animation:"fadeIn 0.2s ease" }} onClick={() => setShowConfirm(false)}>
+            <div onClick={e=>e.stopPropagation()} className="glass-card" style={{ padding:30, maxWidth:360, width:"calc(100% - 32px)", textAlign:"center", animation:"successPop 0.28s ease", border:"1px solid rgba(0,200,240,0.22)" }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>💾</div>
+              <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, marginBottom:9 }}>Save Profile?</h3>
+              <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:22, lineHeight:1.6 }}>Confirm updating your profile details. This will be used for future orders.</p>
+              <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
+                <button className="btn-primary" style={{ padding:"10px 26px" }} onClick={confirmSave}>✓ Confirm</button>
+                <button className="btn-secondary" style={{ padding:"10px 22px" }} onClick={() => setShowConfirm(false)}>Cancel</button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── MAIN APP ─────────────────────────────────────────────────────────────────
-
+// ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage] = useState("home");
-  const [activeCat, setActiveCat] = useState("mobiles");
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [cart, setCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
-  const [compareList, setCompareList] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [user, setUser] = useState(null);
-  const [showLogin, setShowLogin] = useState(false);
-  const [popup, setPopup] = useState(null);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [prevPage, setPrevPage] = useState(null);
+  const [page,           setPage]           = useState("home");
+  const [activeCat,      setActiveCat]      = useState("mobiles");
+  const [selectedProduct,setSelectedProduct] = useState(null);
+  const [cart,           setCart]           = useState([]);
+  const [wishlist,       setWishlist]       = useState([]);
+  const [compareList,    setCompareList]    = useState([]);
+  const [orders,         setOrders]         = useState([]);
+  const [user,           setUser]           = useState(null);
+  const [popup,          setPopup]          = useState(null);
+  const [chatOpen,       setChatOpen]       = useState(false);
+  const [showScrollTop,  setShowScrollTop]  = useState(false);
+  const [prevPage,       setPrevPage]       = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen,     setSearchOpen]     = useState(false);
+  const [megaOpen,       setMegaOpen]       = useState(false);
+  const megaRef = useRef(null);
 
   useEffect(() => {
-    const handler = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
+    const onScroll  = () => setShowScrollTop(window.scrollY > 260);
+    const onKey     = e  => { if (e.key==="Escape") { setSearchOpen(false); setMegaOpen(false); } };
+    window.addEventListener("scroll", onScroll);
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("keydown", onKey); };
   }, []);
 
-  const showPopup = useCallback((msg, icon = "✅") => {
-    setPopup({ msg, icon });
+  // Close mega menu on outside click
+  useEffect(() => {
+    const handler = e => { if (megaRef.current && !megaRef.current.contains(e.target)) setMegaOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const navigate = (p, extra = {}) => {
+  const showPopup = useCallback((msg, icon="✅") => setPopup({ msg, icon }), []);
+
+  const navigate = (p, extra={}) => {
     setPrevPage(page);
     setPage(p);
-    if (extra.cat) setActiveCat(extra.cat);
+    if (extra.cat)     setActiveCat(extra.cat);
     if (extra.product) setSelectedProduct(extra.product);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top:0, behavior:"smooth" });
+    setMobileMenuOpen(false);
+    setMegaOpen(false);
   };
 
-  const addToCart = (product) => {
-    if (!user) { setShowLogin(true); return; }
-    setCart((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) return prev.map((i) => i.id === product.id ? { ...i, qty: i.qty + (product.qty || 1) } : i);
-      return [...prev, { ...product, qty: product.qty || 1 }];
+  const addToCart = product => {
+    if (!user) { navigate("profile"); showPopup("Please save your profile first","👤"); return; }
+    setCart(prev => {
+      const ex = prev.find(i => i.id===product.id);
+      if (ex) return prev.map(i => i.id===product.id ? {...i, qty:i.qty+(product.qty||1)} : i);
+      return [...prev, { ...product, qty:product.qty||1 }];
     });
-    showPopup("Added to cart!", "🛒");
+    showPopup("Added to cart! 🛒","🛒");
   };
 
-  const toggleWishlist = (product) => {
-    setWishlist((prev) => prev.some((w) => w.id === product.id) ? prev.filter((w) => w.id !== product.id) : [...prev, product]);
+  const toggleWishlist = product => {
+    setWishlist(prev => prev.some(w=>w.id===product.id) ? prev.filter(w=>w.id!==product.id) : [...prev, product]);
   };
 
-  const toggleCompare = (product) => {
-    setCompareList((prev) => {
-      if (prev.some((c) => c.id === product.id)) return prev.filter((c) => c.id !== product.id);
-      if (prev.length >= 4) { showPopup("Max 4 products to compare", "⚠️"); return prev; }
+  const toggleCompare = product => {
+    setCompareList(prev => {
+      if (prev.some(c=>c.id===product.id)) return prev.filter(c=>c.id!==product.id);
+      if (prev.length >= 4) { showPopup("Max 4 products to compare","⚠️"); return prev; }
       return [...prev, product];
     });
   };
 
-  const handleLogin = (u) => {
-    setUser(u);
-    setShowLogin(false);
-    showPopup("Login Successful! Welcome back!", "🎉");
+  const handleSaveProfile = u => {
+    setUser({ ...user, ...u, name:u.fullName||u.name });
+    showPopup("Profile saved! 🎉","✅");
   };
 
-  const handleLogout = () => {
-    setUser(null);
+  const placeOrder = details => {
+    const order = { ...details, items:cart, id:Date.now(), date:new Date().toLocaleDateString() };
+    setOrders(prev => [...prev, order]);
     setCart([]);
-    setOrders([]);
-    showPopup("Logged out successfully", "👋");
-  };
-
-  const handleSearch = (q) => {
-    setSearchQuery(q);
-    if (q.trim()) {
-      const r = ALL_PRODUCTS.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()) || p.brand.toLowerCase().includes(q.toLowerCase()));
-      setSearchResults(r);
-    } else {
-      setSearchResults([]);
-    }
-  };
-
-  const placeOrder = (details) => {
-    const order = { ...details, items: cart, id: Date.now(), date: new Date().toLocaleDateString() };
-    setOrders((prev) => [...prev, order]);
-    setCart([]);
-    navigate("order_success", { product: order });
     setSelectedProduct(order);
+    navigate("order_success", { product:order });
+    showPopup("Order placed! 🎉","🎉");
   };
 
-  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const cartCount = cart.reduce((s,i) => s+i.qty, 0);
+  const NAV_LINKS = [["home","Home"],["deals","Deals"],["brands","Brands"],["categories","Categories"],["contact","Contact"],["help","Help"]];
 
   return (
     <>
       <style>{css}</style>
 
-      {/* Navbar */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 1000, background: "rgba(10,10,10,0.95)", backdropFilter: "blur(16px)", borderBottom: "1px solid #1a1a1a", padding: "0 24px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 16, height: 60 }}>
-          <div onClick={() => navigate("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 8, minWidth: "fit-content" }}>
-            <span style={{ fontSize: 22 }}>⚡</span>
-            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: 20 }}><span className="gradient-text">Electronic</span> <span style={{ color: "#F0EDE8" }}>Store</span></span>
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onNavigate={navigate} />}
+
+      {/* ── NAVBAR ── */}
+      <nav style={{ position:"sticky", top:0, zIndex:1000, background:"rgba(5,7,15,0.92)", backdropFilter:"blur(22px)", borderBottom:"1px solid rgba(255,255,255,0.06)", width:"100%" }}>
+        <div style={{ width:"100%", padding:"0 clamp(14px,2.5vw,40px)", display:"flex", alignItems:"center", justifyContent:"space-between", height:64 }}>
+          {/* LEFT — Logo */}
+          <div onClick={() => navigate("home")} style={{ cursor:"pointer", display:"flex", alignItems:"center", gap:9, minWidth:"fit-content", marginRight:20, flexShrink:0 }}>
+            <div style={{ width:36, height:36, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, boxShadow:"0 3px 14px rgba(0,128,238,0.4)", animation:"glowPulse 3s ease-in-out infinite" }}>⚡</div>
+            <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:20, letterSpacing:-0.4 }}><span className="gradient-text">Electronic</span> <span style={{ color:"#E2ECFF" }}>Store</span></span>
           </div>
-          <div style={{ flex: 1, position: "relative", maxWidth: 400 }}>
-            <input
-              className="input-field"
-              placeholder="Search products, brands…"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              style={{ padding: "7px 14px 7px 36px", fontSize: 13 }}
-            />
-            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#555", fontSize: 14 }}>🔍</span>
-            {searchResults.length > 0 && (
-              <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "#111", border: "1px solid #222", borderRadius: 10, maxHeight: 300, overflowY: "auto", zIndex: 999, animation: "slideDown 0.2s ease" }}>
-                {searchResults.slice(0, 8).map((p) => (
-                  <div key={p.id} onClick={() => { navigate("product", { product: p }); setSearchQuery(""); setSearchResults([]); }} style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", transition: "background 0.1s" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#1a1a1a"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                    <img src={p.image} alt="" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6 }} onError={(e) => { e.target.src = "https://via.placeholder.com/100x100/111/333?text=P"; }} />
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</p>
-                      <p style={{ fontSize: 12, color: "#E63946" }}>{formatPrice(Math.round(p.price * (1 - p.discount / 100)))}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+
+          {/* CENTER — Search bar (desktop) */}
+          <div className="hide-mobile" style={{ flex:1, maxWidth:500, margin:"0 40px" }}>
+            <button onClick={() => setSearchOpen(true)}
+              style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.09)", borderRadius:10, padding:"10px 15px", display:"flex", alignItems:"center", gap:9, cursor:"pointer", transition:"all 0.25s", textAlign:"left" }}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(0,200,240,0.35)"; e.currentTarget.style.boxShadow="0 0 8px rgba(0,245,196,0.15)"; e.currentTarget.style.background="rgba(0,200,240,0.04)";}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)"; e.currentTarget.style.boxShadow="none"; e.currentTarget.style.background="rgba(255,255,255,0.04)";}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4E5F7A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span style={{ fontSize:13, color:"#2E3E58", flex:1 }}>Search products, brands…</span>
+              <span style={{ fontSize:10, color:"#2A3A50", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:5, padding:"2px 6px", flexShrink:0 }}>⌘K</span>
+            </button>
           </div>
-          <div className="nav-categories hide-mobile" style={{ display: "flex", gap: 2, flex: 1, justifyContent: "center" }}>
-            {[["home", "Home"], ["deals", "Deals"], ["brands", "Brands"], ["contact", "Contact"]].map(([p, l]) => (
-              <span key={p} className={`nav-link ${page === p ? "active" : ""}`} onClick={() => navigate(p)}>{l}</span>
-            ))}
-            <div style={{ position: "relative" }}>
-              <span className="nav-link" style={{ cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.nextSibling.style.display = "block"; }} onMouseLeave={(e) => { setTimeout(() => { if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = "none"; }, 200); }}>Categories ▾</span>
-              <div style={{ display: "none", position: "absolute", top: "100%", left: 0, background: "#111", border: "1px solid #222", borderRadius: 10, padding: 8, minWidth: 180, zIndex: 999 }} onMouseEnter={(e) => { e.currentTarget.style.display = "block"; }} onMouseLeave={(e) => { e.currentTarget.style.display = "none"; }}>
-                {CATEGORIES.map((c) => (
-                  <div key={c.id} onClick={() => navigate("category", { cat: c.id })} style={{ padding: "8px 12px", borderRadius: 6, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", gap: 8, transition: "background 0.1s" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#1a1a1a"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                    <span>{c.icon}</span> {c.name}
+
+          {/* RIGHT — Nav links + Icons */}
+          <div style={{ display:"flex", alignItems:"center", gap:0, flexShrink:0 }}>
+            {/* Nav links (desktop) */}
+            <div className="hide-mobile" style={{ display:"flex", gap:24, alignItems:"center", marginRight:20, fontSize:14, color:"#ccc" }}>
+              {NAV_LINKS.map(([p,l]) =>
+                p === "categories" ? (
+                  <div key={p} ref={megaRef} style={{ position:"relative" }}>
+                    <span className={`nav-link ${page==="category"?"active":""}`}
+                      style={{ display:"flex", alignItems:"center", gap:4, userSelect:"none" }}
+                      onClick={() => setMegaOpen(!megaOpen)}>
+                      Categories
+                      <span style={{ fontSize:10, transition:"transform 0.2s", transform:megaOpen?"rotate(180deg)":"none" }}>▾</span>
+                    </span>
+                    {megaOpen && <MegaMenu onNavigate={navigate} />}
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <span key={p} className={`nav-link ${page===p?"active":""}`} onClick={() => navigate(p)}>{l}</span>
+                )
+              )}
             </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {user && (
-              <button onClick={() => navigate("wishlist")} style={{ background: "none", border: "none", color: page === "wishlist" ? "#E63946" : "#888", fontSize: 20, cursor: "pointer", position: "relative" }}>🤍</button>
-            )}
-            {user && (
-              <button onClick={() => navigate("compare")} style={{ background: "none", border: "none", color: page === "compare" ? "#F4A300" : "#888", fontSize: 20, cursor: "pointer", position: "relative" }}>
-                ⊞
-                {compareList.length > 0 && <span style={{ position: "absolute", top: -4, right: -4, background: "#F4A300", color: "#000", borderRadius: "50%", width: 16, height: 16, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{compareList.length}</span>}
+
+            {/* Icons */}
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              {/* Mobile search */}
+              <button className="hide-desktop" onClick={() => setSearchOpen(true)}
+                style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:19, cursor:"pointer", padding:"4px 5px", transition:"color 0.2s" }}
+                onMouseEnter={e=>e.currentTarget.style.color="#00C8F0"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
-            )}
-            {user ? (
-              <>
-                <button onClick={() => navigate("cart")} style={{ background: "none", border: "none", color: page === "cart" ? "#E63946" : "#888", fontSize: 20, cursor: "pointer", position: "relative" }}>
-                  🛒
-                  {cartCount > 0 && <span style={{ position: "absolute", top: -4, right: -4, background: "#E63946", color: "#fff", borderRadius: "50%", width: 16, height: 16, fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{cartCount}</span>}
-                </button>
-                <button onClick={() => navigate("profile")} style={{ background: "linear-gradient(135deg,#E63946,#F4A300)", border: "none", borderRadius: "50%", width: 34, height: 34, color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>{user.name[0].toUpperCase()}</button>
-                <button onClick={handleLogout} className="btn-secondary" style={{ fontSize: 12, padding: "6px 12px" }}>Logout</button>
-              </>
-            ) : (
-              <button className="btn-primary" onClick={() => setShowLogin(true)} style={{ fontSize: 13, padding: "8px 16px" }}>Login</button>
-            )}
+              <button onClick={() => navigate("wishlist")}
+                style={{ background:"none", border:"none", color:page==="wishlist"?"#F03060":"#4E5F7A", fontSize:19, cursor:"pointer", transition:"all 0.2s", padding:"4px 5px" }}
+                onMouseEnter={e=>e.currentTarget.style.transform="scale(1.15)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>🤍</button>
+              <button onClick={() => navigate("compare")}
+                style={{ background:"none", border:"none", color:page==="compare"?"#FFB300":"#4E5F7A", fontSize:19, cursor:"pointer", position:"relative", padding:"4px 5px", transition:"color 0.2s" }}>
+                ⊞{compareList.length>0 && <span style={{ position:"absolute", top:-2, right:-2, background:"#FFB300", color:"#000", borderRadius:"50%", width:14, height:14, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{compareList.length}</span>}
+              </button>
+              <button onClick={() => navigate("cart")}
+                style={{ background:"none", border:"none", color:page==="cart"?"#00C8F0":"#4E5F7A", fontSize:19, cursor:"pointer", position:"relative", padding:"4px 5px", transition:"color 0.2s" }}>
+                🛒{cartCount>0 && <span style={{ position:"absolute", top:-2, right:-2, background:"linear-gradient(135deg,#0080EE,#6457FF)", color:"#fff", borderRadius:"50%", width:14, height:14, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{cartCount}</span>}
+              </button>
+              <button onClick={() => navigate("profile")}
+                style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(0,128,238,0.07)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:9, padding:"5px 12px", cursor:"pointer", transition:"all 0.2s" }}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.15)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.38)"; e.currentTarget.style.transform="scale(1.04)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.07)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.18)"; e.currentTarget.style.transform="scale(1)";}}>
+                <div style={{ width:24, height:24, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800 }}>{user?.name?user.name[0].toUpperCase():"👤"}</div>
+                <span className="hide-mobile" style={{ fontSize:12, fontWeight:500, color:"#8A9BBD" }}>{user?.name?user.name.split(" ")[0]:"Profile"}</span>
+              </button>
+              <button className="hide-desktop" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, color:"#8A9BBD", fontSize:18, cursor:"pointer", padding:"6px 9px", marginLeft:4 }}>☰</button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div style={{ background:"#060912", borderTop:"1px solid rgba(0,128,238,0.1)", padding:"10px 14px 14px", animation:"slideDown 0.2s ease" }}>
+            {NAV_LINKS.filter(([p])=>p!=="categories").map(([p,l]) => (
+              <div key={p} onClick={() => navigate(p)}
+                style={{ padding:"10px 11px", color:page===p?"#00C8F0":"#8A9BBD", fontWeight:page===p?600:400, fontSize:14, cursor:"pointer", borderRadius:7, transition:"background 0.12s" }}
+                onMouseEnter={e=>e.currentTarget.style.background="rgba(0,128,238,0.07)"}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{l}</div>
+            ))}
+            <div style={{ borderTop:"1px solid #141928", paddingTop:10, marginTop:6, display:"flex", flexWrap:"wrap", gap:6 }}>
+              {CATEGORIES.map(c => (
+                <button key={c.id} onClick={() => navigate("category",{cat:c.id})}
+                  style={{ background:"#0B0F1E", border:`1px solid #141928`, color:"#8A9BBD", borderRadius:7, padding:"5px 10px", fontSize:11, cursor:"pointer" }}>
+                  {c.icon} {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* Pages */}
-      <main style={{ minHeight: "calc(100vh - 60px)" }}>
-        {page === "home" && (
-          <HomePage products={ALL_PRODUCTS} onAddCart={addToCart} onWishlist={toggleWishlist} onCompare={toggleCompare} onView={(p) => navigate("product", { product: p })} wishlist={wishlist} compareList={compareList} onCategoryClick={(c) => navigate("category", { cat: c })} onDealsPage={() => navigate("deals")} />
-        )}
-        {page === "category" && (
-          <CategoryPage category={activeCat} products={ALL_PRODUCTS} onAddCart={addToCart} onWishlist={toggleWishlist} onCompare={toggleCompare} onView={(p) => navigate("product", { product: p })} wishlist={wishlist} compareList={compareList} />
-        )}
-        {page === "product" && selectedProduct && (
-          <ProductDetailPage product={selectedProduct} onAddCart={addToCart} onWishlist={toggleWishlist} wishlisted={wishlist.some((w) => w.id === selectedProduct.id)} onBack={() => navigate(prevPage || "home")} onCompare={toggleCompare} inCompare={compareList.some((c) => c.id === selectedProduct.id)} />
-        )}
-        {page === "cart" && (
-          <CartPage cart={cart} onUpdateQty={(id, qty) => { if (qty < 1) { setCart((prev) => prev.filter((i) => i.id !== id)); } else { setCart((prev) => prev.map((i) => i.id === id ? { ...i, qty } : i)); } }} onRemove={(id) => setCart((prev) => prev.filter((i) => i.id !== id))} onCheckout={() => navigate("checkout")} isLoggedIn={!!user} onLoginRequired={() => setShowLogin(true)} />
-        )}
-        {page === "checkout" && (
-          <CheckoutPage cart={cart} onPlaceOrder={placeOrder} onBack={() => navigate("cart")} />
-        )}
-        {page === "order_success" && selectedProduct && (
-          <OrderSuccess order={selectedProduct} onHome={() => navigate("home")} />
-        )}
-        {page === "compare" && (
-          <ComparePage compareList={compareList} onRemove={(id) => setCompareList((prev) => prev.filter((c) => c.id !== id))} onAddCart={addToCart} />
-        )}
-        {page === "deals" && (
-          <DealsPage products={ALL_PRODUCTS} onAddCart={addToCart} onView={(p) => navigate("product", { product: p })} />
-        )}
-        {page === "brands" && (
-          <BrandsPage products={ALL_PRODUCTS} onCategoryClick={(c) => navigate("category", { cat: c })} />
-        )}
-        {page === "contact" && <ContactPage />}
-        {page === "wishlist" && (
-          <WishlistPage wishlist={wishlist} onRemove={toggleWishlist} onAddCart={addToCart} onView={(p) => navigate("product", { product: p })} />
-        )}
-        {page === "profile" && user && (
-          <ProfilePage user={user} orders={orders} />
-        )}
+      {/* ── PAGES ── */}
+      <main style={{ minHeight:"calc(100vh - 64px)", width:"100%", maxWidth:"100%" }}>
+        {page==="home"         && <HomePage products={ALL_PRODUCTS} onAddCart={addToCart} onWishlist={toggleWishlist} onCompare={toggleCompare} onView={p=>navigate("product",{product:p})} wishlist={wishlist} compareList={compareList} onCategoryClick={c=>navigate("category",{cat:c})} onDealsPage={()=>navigate("deals")} onNavigate={navigate} />}
+        {page==="category"     && <CategoryPage category={activeCat} products={ALL_PRODUCTS} onAddCart={addToCart} onWishlist={toggleWishlist} onCompare={toggleCompare} onView={p=>navigate("product",{product:p})} wishlist={wishlist} compareList={compareList} />}
+        {page==="product"      && selectedProduct?.name && <ProductDetailPage product={selectedProduct} onAddCart={addToCart} onWishlist={toggleWishlist} wishlisted={wishlist.some(w=>w.id===selectedProduct.id)} onBack={()=>navigate(prevPage||"home")} onCompare={toggleCompare} inCompare={compareList.some(c=>c.id===selectedProduct.id)} />}
+        {page==="cart"         && <CartPage cart={cart} onUpdateQty={(id,qty)=>{ if(qty<1){setCart(p=>p.filter(i=>i.id!==id));}else{setCart(p=>p.map(i=>i.id===id?{...i,qty}:i));}}} onRemove={id=>setCart(p=>p.filter(i=>i.id!==id))} onCheckout={()=>navigate("checkout")} isLoggedIn={!!user} onLoginRequired={()=>navigate("profile")} />}
+        {page==="checkout"     && <CheckoutPage cart={cart} onPlaceOrder={placeOrder} onBack={()=>navigate("cart")} />}
+        {page==="order_success"&& selectedProduct?.address && <OrderSuccess order={selectedProduct} onHome={()=>navigate("home")} />}
+        {page==="compare"      && <ComparePage compareList={compareList} onRemove={id=>setCompareList(p=>p.filter(c=>c.id!==id))} onAddCart={addToCart} />}
+        {page==="deals"        && <DealsPage products={ALL_PRODUCTS} onAddCart={addToCart} onView={p=>navigate("product",{product:p})} />}
+        {page==="brands"       && <BrandsPage products={ALL_PRODUCTS} onCategoryClick={c=>navigate("category",{cat:c})} />}
+        {page==="contact"      && <ContactPage />}
+        {page==="help"         && <HelpPage />}
+        {page==="wishlist"     && <WishlistPage wishlist={wishlist} onRemove={toggleWishlist} onAddCart={addToCart} onView={p=>navigate("product",{product:p})} />}
+        {page==="profile"      && <ProfilePage user={user} onSave={handleSaveProfile} orders={orders} />}
       </main>
 
-      {/* Footer */}
-      <footer style={{ background: "#060606", borderTop: "1px solid #1a1a1a", padding: "48px 24px 24px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 32, marginBottom: 40 }}>
+      {/* ── FOOTER ── */}
+      <footer style={{ background:"#030509", borderTop:"1px solid rgba(0,128,238,0.09)", padding:"52px 0 26px", width:"100%" }}>
+        <div style={{ width:"100%", padding:"0 clamp(14px,3.5vw,56px)" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:44, marginBottom:44 }} className="grid-mobile-1">
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <span style={{ fontSize: 22 }}>⚡</span>
-                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontWeight: 700, fontSize: 18 }}><span className="gradient-text">Electronic</span> Store</span>
+              <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:14 }}>
+                <div style={{ width:34, height:34, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>⚡</div>
+                <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:20 }}><span className="gradient-text">Electronic</span> <span style={{ color:"#E2ECFF" }}>Store</span></span>
               </div>
-              <p style={{ fontSize: 13, color: "#666", lineHeight: 1.7 }}>Karnataka's most trusted electronics destination. Premium quality, best prices.</p>
-            </div>
-            <div>
-              <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>Quick Links</p>
-              {[["home", "Home"], ["deals", "Deals & Offers"], ["brands", "Brands"], ["contact", "Contact Us"]].map(([p, l]) => (
-                <p key={p} onClick={() => navigate(p)} style={{ fontSize: 13, color: "#666", marginBottom: 8, cursor: "pointer", transition: "color 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "#E63946"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#666"; }}>{l}</p>
-              ))}
-            </div>
-            <div>
-              <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>Categories</p>
-              {CATEGORIES.slice(0, 5).map((c) => (
-                <p key={c.id} onClick={() => navigate("category", { cat: c.id })} style={{ fontSize: 13, color: "#666", marginBottom: 8, cursor: "pointer", transition: "color 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.color = "#E63946"; }} onMouseLeave={(e) => { e.currentTarget.style.color = "#666"; }}>{c.icon} {c.name}</p>
-              ))}
-            </div>
-            <div>
-              <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>Contact</p>
-              <p style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>📍 Sirsi, Uttara Kannada, KA 581355</p>
-              <p style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>📞 111 1234 5555</p>
-              <p style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>📧 electronicstore@gmail.com</p>
-              <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-                {["📸", "📘", "🐦"].map((icon, i) => (
-                  <div key={i} style={{ width: 36, height: 36, background: "#1a1a1a", border: "1px solid #222", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 16, transition: "transform 0.2s" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}>{icon}</div>
+              <p style={{ fontSize:13, color:"#4E5F7A", lineHeight:1.75, maxWidth:300, marginBottom:20 }}>Karnataka's most trusted electronics destination. Premium quality, best prices, authorized dealership for all major brands.</p>
+              <div style={{ display:"flex", gap:9 }}>
+                {[["📸","Instagram"],["📘","Facebook"],["🐦","Twitter"],["▶️","YouTube"]].map(([icon,name]) => (
+                  <div key={name} title={name} style={{ width:38, height:38, background:"rgba(0,128,238,0.07)", border:"1px solid rgba(0,200,240,0.13)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:15, transition:"all 0.22s" }}
+                    onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.18)"; e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.35)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.07)"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.13)";}}>
+                    {icon}
+                  </div>
                 ))}
               </div>
             </div>
+            <div>
+              <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, marginBottom:16, color:"#C0D0E8" }}>Contact Us</p>
+              {[["📍","Sirsi, Uttara Kannada, Karnataka 581355"],["📞","111 1234 5555"],["✉️","electronicstore@gmail.com"],["🕐","Mon–Sat: 9AM – 7PM"]].map(([ic,val]) => (
+                <div key={val} style={{ display:"flex", gap:9, marginBottom:10, alignItems:"flex-start" }}>
+                  <span style={{ fontSize:13, marginTop:1 }}>{ic}</span>
+                  <span style={{ fontSize:12, color:"#4E5F7A", lineHeight:1.5 }}>{val}</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, marginBottom:16, color:"#C0D0E8" }}>Quick Feedback</p>
+              <p style={{ fontSize:12, color:"#4E5F7A", marginBottom:12, lineHeight:1.6 }}>Share your experience with us</p>
+              <textarea style={{ background:"rgba(8,12,24,0.95)", border:"1.5px solid #1A2440", color:"#E2ECFF", padding:"9px 12px", borderRadius:9, fontSize:12, width:"100%", resize:"vertical", outline:"none", marginBottom:9, minHeight:72, fontFamily:"'DM Sans',sans-serif" }} placeholder="Your feedback…" />
+              <button className="btn-primary" style={{ width:"100%", padding:10, fontSize:12 }}>Submit Feedback</button>
+            </div>
           </div>
-          <div style={{ borderTop: "1px solid #1a1a1a", paddingTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            <p style={{ fontSize: 12, color: "#555" }}>© 2024 Electronic Store, Sirsi. All rights reserved.</p>
-            <p style={{ fontSize: 12, color: "#555" }}>Made with ❤️ in Karnataka, India</p>
+          <div style={{ borderTop:"1px solid rgba(0,128,238,0.07)", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:9 }}>
+            <p style={{ fontSize:11, color:"#3A5070" }}>© 2025 Electronic Store, Sirsi. All rights reserved.</p>
+            <p style={{ fontSize:11, color:"#3A5070" }}>Made with ❤️ in Karnataka, India</p>
           </div>
         </div>
       </footer>
 
-      {/* Modals & Overlays */}
-      {showLogin && <LoginPage onLogin={handleLogin} onClose={() => setShowLogin(false)} />}
+      {/* ── OVERLAYS ── */}
       {popup && <Popup msg={popup.msg} icon={popup.icon} onClose={() => setPopup(null)} />}
 
-      {/* Chatbot */}
+      {/* Chatbot toggle */}
       {page === "home" && (
-        <button onClick={() => setChatOpen(!chatOpen)} style={{ position: "fixed", bottom: chatOpen ? 468 : 24, right: 24, zIndex: 1500, width: 52, height: 52, background: "linear-gradient(135deg,#E63946,#F4A300)", border: "none", borderRadius: "50%", fontSize: 22, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(230,57,70,0.4)", transition: "bottom 0.3s ease", cursor: "pointer" }}>
+        <button onClick={() => setChatOpen(!chatOpen)}
+          style={{ position:"fixed", bottom:chatOpen?488:26, right:78, zIndex:1500, width:52, height:52, background:"linear-gradient(135deg,#0080EE,#6457FF)", border:"none", borderRadius:"50%", fontSize:20, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 24px rgba(0,128,238,0.5)", transition:"bottom 0.3s cubic-bezier(0.22,1,0.36,1)", cursor:"pointer", animation:"glowPulse 2.5s ease-in-out infinite" }}>
           {chatOpen ? "✕" : "🤖"}
         </button>
       )}
-      {chatOpen && page === "home" && <Chatbot user={user} cart={cart} orders={orders} onClose={() => setChatOpen(false)} />}
+      {chatOpen && page==="home" && <Chatbot user={user} cart={cart} orders={orders} onClose={() => setChatOpen(false)} />}
 
       {/* Scroll to top */}
       {showScrollTop && (
-        <button className="scrolltop" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>↑</button>
+        <button className="scrolltop" onClick={() => window.scrollTo({ top:0, behavior:"smooth" })}>↑</button>
       )}
     </>
   );
