@@ -2,40 +2,42 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
 const C = {
-  dark:       "#05070F",
-  darkMid:    "#080C18",
-  darkCard:   "#0B0F1E",
-  darkBorder: "#141928",
-  cyan:       "#00C8F0",
-  blue:       "#0080EE",
-  purple:     "#6457FF",
-  pink:       "#FF3CAC",
-  white:      "#EEF4FF",
-  silver:     "#8A9BBD",
-  text:       "#E2ECFF",
-  muted:      "#4E5F7A",
-  gold:       "#FFB300",
-  green:      "#00D97A",
-  red:        "#F03060",
+  dark:       "#0B0F19",
+  darkMid:    "#111827",
+  darkCard:   "#111827",
+  darkBorder: "#1F2937",
+  cyan:       "#22D3EE",
+  blue:       "#2563EB",
+  purple:     "#8B5CF6",
+  pink:       "#EC4899",
+  white:      "#F0F4FF",
+  silver:     "#9CA3AF",
+  text:       "#F0F4FF",
+  muted:      "#6B7280",
+  gold:       "#F59E0B",
+  green:      "#10B981",
+  red:        "#EF4444",
 };
 
 // ─── GLOBAL CSS ───────────────────────────────────────────────────────────────
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    background: #05070F;
-    color: #E2ECFF;
-    font-family: 'DM Sans', sans-serif;
+    background: #0B0F19;
+    color: #F0F4FF;
+    font-family: 'Inter', sans-serif;
     overflow-x: hidden;
     width: 100%;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #05070F; }
-  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#0080EE,#6457FF); border-radius: 2px; }
-  input, select, textarea, button { font-family: 'DM Sans', sans-serif; }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #111827; }
+  ::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#2563EB,#8B5CF6); border-radius: 3px; }
+  input, select, textarea, button { font-family: 'Inter', sans-serif; }
   a { text-decoration: none; color: inherit; }
 
   @keyframes fadeInUp    { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
@@ -46,50 +48,65 @@ const css = `
   @keyframes cartBounce  { 0%{transform:scale(1);} 30%{transform:scale(1.3);} 60%{transform:scale(0.92);} 100%{transform:scale(1);} }
   @keyframes successPop  { 0%{transform:scale(0.5);opacity:0;} 70%{transform:scale(1.08);} 100%{transform:scale(1);opacity:1;} }
   @keyframes float       { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
-  @keyframes glowPulse   { 0%,100%{box-shadow:0 0 16px rgba(0,128,238,0.3);} 50%{box-shadow:0 0 36px rgba(0,200,240,0.55),0 0 60px rgba(100,87,255,0.2);} }
+  @keyframes glowPulse   { 0%,100%{box-shadow:0 0 16px rgba(37,99,235,0.3);} 50%{box-shadow:0 0 36px rgba(37,99,235,0.55),0 0 60px rgba(100,87,255,0.2);} }
   @keyframes gradMove    { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
   @keyframes popupIn     { from{opacity:0;transform:translateX(100px) scale(0.85);} to{opacity:1;transform:translateX(0) scale(1);} }
   @keyframes countUp     { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
   @keyframes megaSlide   { from{opacity:0;transform:translateY(-6px);} to{opacity:1;transform:translateY(0);} }
+  @keyframes waPulse     { 0%,100%{transform:scale(1); box-shadow:0 4px 20px rgba(37,211,102,0.4);} 50%{transform:scale(1.04); box-shadow:0 8px 32px rgba(37,211,102,0.65);} }
 
   .page-enter { animation: fadeInUp 0.4s cubic-bezier(0.22,1,0.36,1) both; }
 
   /* ── BUTTONS ── */
   .btn-primary {
-    background: linear-gradient(135deg,#0080EE,#00C8F0);
+    background: linear-gradient(135deg,#2563EB,#8B5CF6);
     background-size: 200% 200%;
     color:#fff; border:none; padding:10px 22px; border-radius:10px;
     font-weight:600; font-size:14px; cursor:pointer;
-    transition:all 0.25s ease; position:relative; overflow:hidden;
-    box-shadow:0 3px 12px rgba(0,128,238,0.28);
+    transition:all 0.3s cubic-bezier(0.22,1,0.36,1); position:relative; overflow:hidden;
+    box-shadow:0 3px 14px rgba(37,99,235,0.3);
+    letter-spacing: 0.02em;
   }
-  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,128,238,0.45); }
+  .btn-primary:hover { transform:translateY(-2px) scale(1.03); box-shadow:0 8px 28px rgba(37,99,235,0.5), 0 0 20px rgba(139,92,246,0.2); }
+  .btn-primary:active { transform:translateY(0) scale(0.98); }
 
   .btn-secondary {
-    background:transparent; color:#8A9BBD; border:1px solid #1C2740;
+    background:transparent; color:#9CA3AF; border:1px solid #1F2937;
     padding:10px 22px; border-radius:10px; font-weight:500; font-size:14px;
     cursor:pointer; transition:all 0.25s ease;
   }
-  .btn-secondary:hover { border-color:#00C8F0; color:#00C8F0; background:rgba(0,200,240,0.07); }
+  .btn-secondary:hover { border-color:#2563EB; color:#22D3EE; background:rgba(37,99,235,0.07); }
+
+  /* ── WHATSAPP BUTTON ── */
+  .btn-whatsapp {
+    display:inline-flex; align-items:center; gap:9px;
+    background:#25D366; color:#fff;
+    border:none; padding:12px 22px; border-radius:12px;
+    font-weight:700; font-size:14px; cursor:pointer;
+    animation: waPulse 2.5s ease-in-out infinite;
+    transition:all 0.25s ease; text-decoration:none;
+  }
+  .btn-whatsapp:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 14px 40px rgba(37,211,102,0.5); animation:none; }
+  .btn-whatsapp svg { width:20px; height:20px; fill:#fff; flex-shrink:0; }
 
   /* ── SKELETON ── */
   .skeleton {
-    background:linear-gradient(90deg,#0B0F1E 25%,#131828 50%,#0B0F1E 75%);
+    background:linear-gradient(90deg,#111827 25%,#1a2235 50%,#111827 75%);
     background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px;
   }
 
   /* ── NAV ── */
   .nav-link {
-    color:#8A9BBD; font-size:14px; font-weight:500; padding:6px 0;
+    color:#9CA3AF; font-size:14px; font-weight:500; padding:6px 0;
     border-radius:0; transition:all 0.2s; cursor:pointer; position:relative;
-    white-space:nowrap; background:none;
+    white-space:nowrap; background:none; letter-spacing:0.01em;
   }
   .nav-link::after {
     content:''; position:absolute; bottom:-2px; left:0; right:0; height:2px;
-    background:linear-gradient(90deg,#00C8F0,#6457FF); border-radius:2px;
+    background:linear-gradient(90deg,#22D3EE,#8B5CF6); border-radius:2px;
     transform:scaleX(0); transition:transform 0.25s ease;
   }
-  .nav-link:hover, .nav-link.active { color:#E2ECFF; }
+  .nav-link:hover, .nav-link.active { color:#F0F4FF; }
   .nav-link:hover::after, .nav-link.active::after { transform:scaleX(1); }
 
   /* ── RESPONSIVE GRID ── */
@@ -100,35 +117,35 @@ const css = `
   /* ── MEGA MENU ── */
   .mega-menu {
     position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%);
-    background:#07091A; border:1px solid rgba(0,128,238,0.18);
+    background:#0F1628; border:1px solid rgba(37,99,235,0.18);
     border-radius:18px; padding:24px; width:700px; max-width:calc(100vw - 32px);
-    z-index:1200; box-shadow:0 20px 60px rgba(0,0,0,0.65), 0 0 30px rgba(0,128,238,0.07);
+    z-index:1200; box-shadow:0 20px 60px rgba(0,0,0,0.7), 0 0 30px rgba(37,99,235,0.06);
     animation:megaSlide 0.2s cubic-bezier(0.22,1,0.36,1);
     display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;
   }
   .mega-menu-title {
     font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px;
-    color:#4E5F7A; margin-bottom:10px; padding-bottom:8px;
-    border-bottom:1px solid #141928;
+    color:#6B7280; margin-bottom:10px; padding-bottom:8px;
+    border-bottom:1px solid #1F2937;
   }
   .mega-item {
     display:flex; align-items:center; gap:8px; padding:8px 10px;
     border-radius:9px; cursor:pointer; transition:all 0.15s;
-    font-size:13px; color:#8A9BBD; font-weight:500;
+    font-size:13px; color:#9CA3AF; font-weight:500;
   }
-  .mega-item:hover { background:rgba(0,128,238,0.1); color:#00C8F0; }
+  .mega-item:hover { background:rgba(37,99,235,0.1); color:#22D3EE; }
 
   /* ── CARDS ── */
   .card-product {
-    background:#0B0F1E; border:1px solid #141928; border-radius:16px;
-    overflow:hidden; transition:all 0.3s cubic-bezier(0.22,1,0.36,1);
+    background:#111827; border:1px solid #1F2937; border-radius:16px;
+    overflow:hidden; transition:all 0.35s cubic-bezier(0.22,1,0.36,1);
     display:flex; flex-direction:column; height:100%;
-    box-shadow:0 4px 16px rgba(0,0,0,0.25);
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);
   }
   .card-product:hover {
-    border-color:rgba(0,200,240,0.35);
-    transform:translateY(-5px);
-    box-shadow:0 10px 25px rgba(0,0,0,0.3), 0 0 30px rgba(0,128,238,0.1);
+    border-color:rgba(37,99,235,0.45);
+    transform:translateY(-6px);
+    box-shadow:0 16px 40px rgba(0,0,0,0.4), 0 0 32px rgba(37,99,235,0.14), 0 0 60px rgba(139,92,246,0.06);
   }
   .card-img-wrap {
     position:relative; overflow:hidden; background:#060A16;
@@ -149,27 +166,27 @@ const css = `
     display:inline-block; padding:3px 8px; border-radius:6px;
     font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px;
   }
-  .badge-blue   { background:rgba(0,128,238,0.14); color:#00C8F0; border:1px solid rgba(0,128,238,0.25); }
-  .badge-green  { background:rgba(0,217,122,0.1);  color:#00D97A; border:1px solid rgba(0,217,122,0.2); }
-  .badge-red    { background:rgba(240,48,96,0.1);   color:#F03060; border:1px solid rgba(240,48,96,0.2); }
-  .badge-gold   { background:rgba(255,179,0,0.1);   color:#FFB300; border:1px solid rgba(255,179,0,0.2); }
-  .badge-purple { background:rgba(100,87,255,0.12); color:#9B94FF; border:1px solid rgba(100,87,255,0.25); }
+  .badge-blue   { background:rgba(37,99,235,0.14); color:#22D3EE; border:1px solid rgba(37,99,235,0.25); }
+  .badge-green  { background:rgba(16,185,129,0.1);  color:#10B981; border:1px solid rgba(16,185,129,0.2); }
+  .badge-red    { background:rgba(239,68,68,0.1);   color:#EF4444; border:1px solid rgba(239,68,68,0.2); }
+  .badge-gold   { background:rgba(245,158,11,0.1);  color:#F59E0B; border:1px solid rgba(245,158,11,0.2); }
+  .badge-purple { background:rgba(139,92,246,0.12); color:#A78BFA; border:1px solid rgba(139,92,246,0.25); }
 
   /* ── TYPOGRAPHY ── */
   .gradient-text {
-    background: linear-gradient(135deg,#00C8F0,#0080EE,#6457FF);
+    background: linear-gradient(135deg,#22D3EE,#2563EB,#8B5CF6);
     background-size:200% 200%; animation:gradMove 4s ease infinite;
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   }
   .gradient-text-warm {
-    background:linear-gradient(135deg,#FF3CAC,#FF6B35,#FFB300);
+    background:linear-gradient(135deg,#EC4899,#F59E0B);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   }
   .section-title {
-    font-family:'Syne',sans-serif; font-size:28px; font-weight:800; letter-spacing:-0.4px;
+    font-family:'Outfit',sans-serif; font-size:28px; font-weight:800; letter-spacing:-0.5px;
   }
-  .price-tag { font-family:'Syne',sans-serif; font-weight:700; }
-  .star-filled { color:#FFB300; }
+  .price-tag { font-family:'Outfit',sans-serif; font-weight:700; letter-spacing:-0.3px; }
+  .star-filled { color:#F59E0B; }
   .star-empty  { color:#1E2D45; }
 
   /* ── LAYOUT ── */
@@ -201,48 +218,49 @@ const css = `
 
   /* ── INPUTS ── */
   .input-premium {
-    background:rgba(8,12,24,0.95); border:1.5px solid #1A2440;
-    color:#E2ECFF; padding:10px 14px 10px 40px; border-radius:10px;
+    background:rgba(17,24,39,0.95); border:1.5px solid #1F2937;
+    color:#F0F4FF; padding:10px 14px 10px 40px; border-radius:10px;
     font-size:14px; width:100%; transition:all 0.25s; outline:none;
+    font-family:'Inter',sans-serif;
   }
-  .input-premium:focus { border-color:#0080EE; background:rgba(0,128,238,0.05); box-shadow:0 0 0 3px rgba(0,128,238,0.1); }
-  .input-premium::placeholder { color:#2E3E58; }
+  .input-premium:focus { border-color:#2563EB; background:rgba(37,99,235,0.05); box-shadow:0 0 0 3px rgba(37,99,235,0.12); }
+  .input-premium::placeholder { color:#374151; }
 
   /* ── GLASS ── */
   .glass-card {
-    background:rgba(11,15,30,0.8); backdrop-filter:blur(18px);
-    border:1px solid rgba(20,25,40,0.95); border-radius:15px;
+    background:rgba(17,24,39,0.85); backdrop-filter:blur(18px);
+    border:1px solid rgba(31,41,55,0.95); border-radius:15px;
   }
 
   /* ── POPUP ── */
   .popup-glass {
     position:fixed; top:82px; right:22px; z-index:9999;
-    background:rgba(8,10,22,0.95); backdrop-filter:blur(24px);
-    border:1px solid rgba(0,128,238,0.3); border-radius:16px;
+    background:rgba(11,15,25,0.96); backdrop-filter:blur(24px);
+    border:1px solid rgba(37,99,235,0.28); border-radius:16px;
     padding:14px 20px; min-width:240px; max-width:320px;
-    box-shadow:0 8px 36px rgba(0,0,0,0.55), 0 0 20px rgba(0,128,238,0.12);
+    box-shadow:0 8px 36px rgba(0,0,0,0.55), 0 0 20px rgba(37,99,235,0.1);
     animation:popupIn 0.35s cubic-bezier(0.22,1,0.36,1);
     display:flex; align-items:center; gap:12px;
   }
 
   /* ── HERO ── */
   .hero-bg {
-    background:linear-gradient(135deg,#05070F 0%,#080C18 40%,#070B1E 70%,#05070F 100%);
+    background:linear-gradient(135deg,#0B0F19 0%,#111827 40%,#0D1130 70%,#0B0F19 100%);
     position:relative; overflow:hidden; width:100%;
   }
   .hero-bg::before {
     content:''; position:absolute; inset:0; pointer-events:none;
     background:
-      radial-gradient(ellipse at 12% 50%, rgba(0,128,238,0.12) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 25%, rgba(100,87,255,0.09) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, rgba(0,200,240,0.05) 0%, transparent 40%);
+      radial-gradient(ellipse at 12% 50%, rgba(37,99,235,0.15) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 25%, rgba(139,92,246,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(34,211,238,0.05) 0%, transparent 40%);
   }
 
   /* ── FLASH DEALS SECTION ── */
   .deals-bg {
-    background:linear-gradient(135deg,#0A060E,#10060E,#0A060F);
-    border-top:1px solid rgba(240,48,96,0.12);
-    border-bottom:1px solid rgba(240,48,96,0.12);
+    background:linear-gradient(135deg,#0E0814,#130A14,#0E0814);
+    border-top:1px solid rgba(239,68,68,0.1);
+    border-bottom:1px solid rgba(239,68,68,0.1);
   }
 
   /* ── CATEGORY GRID ── */
@@ -257,29 +275,80 @@ const css = `
   /* ── CHAT ── */
   .chat-window {
     position:fixed; bottom:86px; right:22px; z-index:1500;
-    width:330px; background:#060A18; border:1px solid rgba(0,128,238,0.22);
+    width:330px; background:#060A18; border:1px solid rgba(37,99,235,0.22);
     border-radius:18px; overflow:hidden;
     animation:slideDown 0.28s cubic-bezier(0.22,1,0.36,1);
-    box-shadow:0 20px 70px rgba(0,0,0,0.65), 0 0 40px rgba(0,128,238,0.1);
+    box-shadow:0 20px 70px rgba(0,0,0,0.65), 0 0 40px rgba(37,99,235,0.1);
   }
   @media(max-width:480px) { .chat-window { width:calc(100vw - 28px); right:14px; } }
   .chat-bot-bubble { background:#0D1427; border:1px solid #18243E; border-radius:12px 12px 12px 3px; padding:9px 13px; max-width:80%; font-size:13px; color:#A8BCDA; line-height:1.5; }
-  .chat-user-bubble { background:linear-gradient(135deg,#0080EE,#6457FF); border-radius:12px 12px 3px 12px; padding:9px 13px; max-width:80%; font-size:13px; color:#fff; margin-left:auto; line-height:1.5; }
+  .chat-user-bubble { background:linear-gradient(135deg,#2563EB,#8B5CF6); border-radius:12px 12px 3px 12px; padding:9px 13px; max-width:80%; font-size:13px; color:#fff; margin-left:auto; line-height:1.5; }
 
-  /* ── SEARCH OVERLAY ── */
-  .search-overlay { position:fixed; inset:0; background:rgba(5,7,15,0.88); backdrop-filter:blur(14px); z-index:2000; display:flex; align-items:center; justify-content:center; animation:fadeIn 0.2s ease; }
-  .search-box { width:min(620px,90vw); animation:fadeInUp 0.28s cubic-bezier(0.22,1,0.36,1); }
-  .search-input { width:100%; background:rgba(11,15,30,0.97); border:2px solid rgba(0,200,240,0.38); color:#E2ECFF; padding:17px 20px 17px 54px; border-radius:14px; font-size:17px; outline:none; transition:all 0.25s; font-family:'DM Sans',sans-serif; }
-  .search-input:focus { border-color:rgba(0,200,240,0.65); box-shadow:0 0 28px rgba(0,200,240,0.15); }
-  .search-input::placeholder { color:#2E3E58; }
+  /* ── SEARCH OVERLAY (REMOVED — now inline in navbar) ── */
+  /* Inline navbar search */
+  .nav-search-wrap {
+    position: relative; flex: 1; max-width: 480px; margin: 0 32px;
+  }
+  .nav-search-input {
+    width: 100%;
+    background: rgba(15,20,40,0.9);
+    border: 1.5px solid rgba(37,99,235,0.18);
+    color: #F0F4FF;
+    padding: 10px 40px 10px 42px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+    letter-spacing: 0.01em;
+  }
+  .nav-search-input:focus {
+    border-color: #2563EB;
+    background: rgba(37,99,235,0.06);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12), 0 4px 16px rgba(37,99,235,0.1);
+    width: 100%;
+  }
+  .nav-search-input::placeholder { color: #3A4E68; font-weight: 400; }
+  .nav-search-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    pointer-events: none; transition: opacity 0.2s;
+  }
+  .nav-search-clear {
+    position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08);
+    color: #9CA3AF; border-radius: 6px; width: 22px; height: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+    transition: all 0.18s; line-height: 1;
+  }
+  .nav-search-clear:hover { background: rgba(240,48,96,0.15); border-color: rgba(240,48,96,0.3); color: #EF4444; }
+  /* Inline dropdown results */
+  .nav-search-dropdown {
+    position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+    background: rgba(8,11,24,0.99); border: 1px solid rgba(37,99,235,0.2);
+    border-radius: 14px; overflow: hidden; z-index: 1100;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 24px rgba(37,99,235,0.08);
+    animation: slideDown 0.18s cubic-bezier(0.22,1,0.36,1);
+  }
+  .nav-search-item {
+    padding: 10px 14px; display: flex; align-items: center; gap: 11px;
+    cursor: pointer; border-bottom: 1px solid #0D1524; transition: background 0.12s;
+  }
+  .nav-search-item:last-child { border-bottom: none; }
+  .nav-search-item:hover { background: rgba(37,99,235,0.09); }
+  .nav-search-footer {
+    padding: 10px 14px; background: rgba(37,99,235,0.04);
+    border-top: 1px solid rgba(37,99,235,0.1);
+    text-align: center; font-size: 11px; color: #3A4E68; letter-spacing: 0.03em;
+  }
 
   /* ── SCROLL TOP ── */
   .scrolltop {
     position:fixed; bottom:26px; right:26px; z-index:999;
-    width:44px; height:44px; background:linear-gradient(135deg,#0080EE,#6457FF);
+    width:44px; height:44px; background:linear-gradient(135deg,#2563EB,#8B5CF6);
     border:none; border-radius:50%; color:#fff; font-size:17px;
     display:flex; align-items:center; justify-content:center;
-    box-shadow:0 4px 18px rgba(0,128,238,0.45); cursor:pointer;
+    box-shadow:0 4px 18px rgba(37,99,235,0.45); cursor:pointer;
     animation:glowPulse 2.2s ease-in-out infinite; transition:transform 0.2s;
   }
   .scrolltop:hover { transform:translateY(-3px) scale(1.07); }
@@ -291,41 +360,41 @@ const css = `
   }
 
   /* ── FAQ ── */
-  .faq-item { border-bottom:1px solid #141928; }
+  .faq-item { border-bottom:1px solid #1F2937; }
 
   /* ── BRAND CARD ── */
   .brand-card {
-    background:#0B0F1E; border:1px solid #141928; border-radius:14px;
+    background:#111827; border:1px solid #1F2937; border-radius:14px;
     padding:20px 14px; text-align:center; cursor:pointer; transition:all 0.28s ease;
   }
   .brand-card:hover {
-    border-color:rgba(0,200,240,0.38); transform:translateY(-4px);
-    box-shadow:0 14px 40px rgba(0,0,0,0.35), 0 0 22px rgba(0,128,238,0.09);
+    border-color:rgba(37,99,235,0.38); transform:translateY(-4px);
+    box-shadow:0 14px 40px rgba(0,0,0,0.35), 0 0 22px rgba(37,99,235,0.09);
   }
 
   /* ── NEON BTN ── */
   .neon-glow-btn {
     position:relative; overflow:hidden;
-    background:linear-gradient(135deg,#0080EE,#00C8F0,#6457FF);
+    background:linear-gradient(135deg,#2563EB,#2563EB,#8B5CF6);
     background-size:200% 200%; animation:gradMove 3s ease infinite;
     border:none; border-radius:12px; color:#fff; font-weight:700;
     cursor:pointer; transition:all 0.28s ease;
-    box-shadow:0 4px 20px rgba(0,128,238,0.35);
+    box-shadow:0 4px 20px rgba(37,99,235,0.35);
   }
-  .neon-glow-btn:hover { transform:translateY(-2px) scale(1.015); box-shadow:0 12px 36px rgba(0,128,238,0.5); }
+  .neon-glow-btn:hover { transform:translateY(-2px) scale(1.015); box-shadow:0 12px 36px rgba(37,99,235,0.5), 0 0 24px rgba(139,92,246,0.2); }
 `;
 
 // ─── STATIC DATA ──────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
-  { id:"mobiles",     name:"Mobiles",      icon:"📱", color:"#00C8F0" },
-  { id:"laptops",     name:"Laptops",      icon:"💻", color:"#0080EE" },
-  { id:"tablets",     name:"Tablets",      icon:"📟", color:"#6457FF" },
-  { id:"headphones",  name:"Headphones",   icon:"🎧", color:"#00C8F0" },
-  { id:"speakers",    name:"Speakers",     icon:"🔊", color:"#00D97A" },
-  { id:"smartwatch",  name:"Smartwatches", icon:"⌚", color:"#FFB300" },
+  { id:"mobiles",     name:"Mobiles",      icon:"📱", color:"#22D3EE" },
+  { id:"laptops",     name:"Laptops",      icon:"💻", color:"#2563EB" },
+  { id:"tablets",     name:"Tablets",      icon:"📟", color:"#8B5CF6" },
+  { id:"headphones",  name:"Headphones",   icon:"🎧", color:"#22D3EE" },
+  { id:"speakers",    name:"Speakers",     icon:"🔊", color:"#10B981" },
+  { id:"smartwatch",  name:"Smartwatches", icon:"⌚", color:"#F59E0B" },
   { id:"cameras",     name:"Cameras",      icon:"📷", color:"#FF6B35" },
-  { id:"accessories", name:"Accessories",  icon:"🔌", color:"#F03060" },
+  { id:"accessories", name:"Accessories",  icon:"🔌", color:"#EF4444" },
 ];
 
 const BRANDS = [
@@ -680,15 +749,15 @@ function CountdownTimer({ endTime }) {
   }, [endTime]);
 
   const Block = ({ v, l }) => (
-    <span style={{ background:"rgba(240,48,96,0.12)", border:"1px solid rgba(240,48,96,0.22)", borderRadius:7, padding:"4px 8px", minWidth:36, display:"inline-block", textAlign:"center", fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#F03060" }}>
+    <span style={{ background:"rgba(240,48,96,0.12)", border:"1px solid rgba(240,48,96,0.22)", borderRadius:7, padding:"4px 8px", minWidth:36, display:"inline-block", textAlign:"center", fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, color:"#EF4444" }}>
       {String(v).padStart(2,"0")}
-      <span style={{ display:"block", fontSize:8, color:"#4E5F7A", fontFamily:"'DM Sans',sans-serif", fontWeight:400 }}>{l}</span>
+      <span style={{ display:"block", fontSize:8, color:"#6B7280", fontFamily:"'Inter',sans-serif", fontWeight:400 }}>{l}</span>
     </span>
   );
   return (
     <div style={{ display:"flex", gap:4, alignItems:"center" }}>
-      <Block v={time.h} l="HRS" /><span style={{ color:"#F03060", fontWeight:700, fontSize:13 }}>:</span>
-      <Block v={time.m} l="MIN" /><span style={{ color:"#F03060", fontWeight:700, fontSize:13 }}>:</span>
+      <Block v={time.h} l="HRS" /><span style={{ color:"#EF4444", fontWeight:700, fontSize:13 }}>:</span>
+      <Block v={time.m} l="MIN" /><span style={{ color:"#EF4444", fontWeight:700, fontSize:13 }}>:</span>
       <Block v={time.s} l="SEC" />
     </div>
   );
@@ -698,19 +767,19 @@ function Popup({ msg, icon, onClose }) {
   useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
   return (
     <div className="popup-glass">
-      <div style={{ width:38, height:38, background:"rgba(0,128,238,0.12)", border:"1px solid rgba(0,200,240,0.25)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>{icon}</div>
+      <div style={{ width:38, height:38, background:"rgba(37,99,235,0.12)", border:"1px solid rgba(37,99,235,0.25)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>{icon}</div>
       <div style={{ flex:1 }}>
-        <p style={{ fontSize:13, fontWeight:600, color:"#E2ECFF" }}>{msg}</p>
-        <p style={{ fontSize:11, color:"#4E5F7A", marginTop:2 }}>Electronic Store</p>
+        <p style={{ fontSize:13, fontWeight:600, color:"#F0F4FF" }}>{msg}</p>
+        <p style={{ fontSize:11, color:"#6B7280", marginTop:2 }}>Electronic Store</p>
       </div>
-      <button onClick={onClose} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:16, cursor:"pointer", padding:"2px 4px", flexShrink:0 }}>×</button>
+      <button onClick={onClose} style={{ background:"none", border:"none", color:"#6B7280", fontSize:16, cursor:"pointer", padding:"2px 4px", flexShrink:0 }}>×</button>
     </div>
   );
 }
 
 function SkeletonCard() {
   return (
-    <div style={{ background:"#0B0F1E", border:"1px solid #141928", borderRadius:16, overflow:"hidden" }}>
+    <div style={{ background:"#111827", border:"1px solid #1F2937", borderRadius:16, overflow:"hidden" }}>
       <div className="skeleton" style={{ aspectRatio:"1/1" }} />
       <div style={{ padding:14 }}>
         <div className="skeleton" style={{ height:13, marginBottom:9 }} />
@@ -761,12 +830,12 @@ function ProductCard({ product, onAddCart, onWishlist, onCompare, onView, wishli
         <span className="badge badge-red" style={{ position:"absolute", top:10, left:10 }}>-{product.discount}%</span>
         {/* Wishlist */}
         <button onClick={e => { e.stopPropagation(); onWishlist(product); }}
-          style={{ position:"absolute", top:10, right:10, background:"rgba(5,7,15,0.72)", backdropFilter:"blur(8px)", border:`1px solid ${wishlisted?"#F03060":"rgba(255,255,255,0.1)"}`, borderRadius:"50%", width:32, height:32, fontSize:14, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.2s", cursor:"pointer" }}>
+          style={{ position:"absolute", top:10, right:10, background:"rgba(5,7,15,0.72)", backdropFilter:"blur(8px)", border:`1px solid ${wishlisted?"#EF4444":"rgba(255,255,255,0.1)"}`, borderRadius:"50%", width:32, height:32, fontSize:14, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.2s", cursor:"pointer" }}>
           {wishlisted ? "❤️" : "🤍"}
         </button>
         {/* Brand overlay */}
         <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"6px 12px" }}>
-          <p style={{ fontSize:10, fontWeight:700, color:"#00C8F0", textTransform:"uppercase", letterSpacing:1.2 }}>{product.brand}</p>
+          <p style={{ fontSize:10, fontWeight:700, color:"#22D3EE", textTransform:"uppercase", letterSpacing:1.2 }}>{product.brand}</p>
         </div>
         {product.stock < 5 && (
           <span className="badge badge-red" style={{ position:"absolute", bottom:28, left:10 }}>Low Stock</span>
@@ -775,18 +844,18 @@ function ProductCard({ product, onAddCart, onWishlist, onCompare, onView, wishli
 
       {/* Body */}
       <div className="card-body">
-        <h3 style={{ fontSize:13, fontWeight:600, color:"#D0DEFF", lineHeight:1.45, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden", minHeight:38, marginBottom:7 }}>
+        <h3 style={{ fontSize:13, fontWeight:600, color:"#E8EEFF", lineHeight:1.45, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden", minHeight:38, marginBottom:7 }}>
           {product.name}
         </h3>
         <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:9 }}>
           <Stars rating={product.rating} size={12} />
-          <span style={{ fontSize:11, color:"#4E5F7A" }}>{product.rating} ({product.reviews})</span>
+          <span style={{ fontSize:11, color:"#6B7280" }}>{product.rating} ({product.reviews})</span>
         </div>
         <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:4 }}>
-          <span className="price-tag" style={{ fontSize:18, color:"#00C8F0" }}>{fp(dp)}</span>
+          <span className="price-tag" style={{ fontSize:18, color:"#22D3EE" }}>{fp(dp)}</span>
           <span style={{ fontSize:11, color:"#2E4060", textDecoration:"line-through" }}>{fp(product.price)}</span>
         </div>
-        <p style={{ fontSize:11, color:"#00D97A", marginBottom:0 }}>Save {fp(savings)}</p>
+        <p style={{ fontSize:11, color:"#10B981", marginBottom:0 }}>Save {fp(savings)}</p>
 
         {/* Footer buttons */}
         <div className="card-footer" style={{ display:"flex", gap:7 }}>
@@ -796,7 +865,7 @@ function ProductCard({ product, onAddCart, onWishlist, onCompare, onView, wishli
             {adding ? "✓ Added!" : "Add to Cart"}
           </button>
           <button onClick={e => { e.stopPropagation(); onCompare(product); }}
-            style={{ background:inCompare?"rgba(0,128,238,0.14)":"#090D1C", border:`1px solid ${inCompare?"#00C8F0":"#141928"}`, color:inCompare?"#00C8F0":"#4E5F7A", borderRadius:9, padding:"8px 10px", fontSize:13, transition:"all 0.2s", cursor:"pointer", flexShrink:0 }}>⊞</button>
+            style={{ background:inCompare?"rgba(37,99,235,0.14)":"#090D1C", border:`1px solid ${inCompare?"#22D3EE":"#1F2937"}`, color:inCompare?"#22D3EE":"#6B7280", borderRadius:9, padding:"8px 10px", fontSize:13, transition:"all 0.2s", cursor:"pointer", flexShrink:0 }}>⊞</button>
         </div>
       </div>
     </div>
@@ -837,13 +906,13 @@ function Chatbot({ user, cart, orders, onClose }) {
 
   return (
     <div className="chat-window">
-      <div style={{ background:"linear-gradient(135deg,#050D1A,#091528)", padding:"13px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid rgba(0,200,240,0.12)" }}>
+      <div style={{ background:"linear-gradient(135deg,#050D1A,#091528)", padding:"13px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid rgba(37,99,235,0.12)" }}>
         <div style={{ display:"flex", alignItems:"center", gap:9 }}>
-          <div style={{ width:36, height:36, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>🤖</div>
+          <div style={{ width:36, height:36, background:"linear-gradient(135deg,#2563EB,#8B5CF6)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>🤖</div>
           <div>
             <p style={{ fontWeight:600, fontSize:13, color:"#fff" }}>AI Assistant</p>
             <p style={{ fontSize:10, color:"rgba(255,255,255,0.5)", display:"flex", alignItems:"center", gap:3 }}>
-              <span style={{ width:5, height:5, background:"#00D97A", borderRadius:"50%", display:"inline-block" }} /> Online
+              <span style={{ width:5, height:5, background:"#10B981", borderRadius:"50%", display:"inline-block" }} /> Online
             </p>
           </div>
         </div>
@@ -864,7 +933,7 @@ function Chatbot({ user, cart, orders, onClose }) {
         )}
         <div ref={bottomRef} />
       </div>
-      <div style={{ padding:"10px 14px", borderTop:"1px solid #141928", display:"flex", gap:7 }}>
+      <div style={{ padding:"10px 14px", borderTop:"1px solid #1F2937", display:"flex", gap:7 }}>
         <input className="input-premium" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask anything…" style={{ flex:1, paddingLeft:13 }} />
         <button className="btn-primary" onClick={send} style={{ padding:"9px 12px", flexShrink:0 }}>➤</button>
       </div>
@@ -872,8 +941,8 @@ function Chatbot({ user, cart, orders, onClose }) {
   );
 }
 
-// ─── SEARCH OVERLAY ───────────────────────────────────────────────────────────
-function SearchOverlay({ onClose, onNavigate }) {
+// ─── MOBILE SEARCH BAR ───────────────────────────────────────────────────────
+function MobileSearchBar({ onNavigate, onClose }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
   const inputRef = useRef(null);
@@ -885,45 +954,170 @@ function SearchOverlay({ onClose, onNavigate }) {
     if (v.trim()) {
       setResults(ALL_PRODUCTS.filter(p =>
         p.name.toLowerCase().includes(v.toLowerCase()) || p.brand.toLowerCase().includes(v.toLowerCase())
-      ).slice(0,8));
+      ).slice(0, 6));
     } else setResults([]);
   };
 
+  const pick = p => { onNavigate("product", { product: p }); onClose(); };
+
   return (
-    <div className="search-overlay" onClick={onClose}>
-      <div className="search-box" onClick={e => e.stopPropagation()}>
-        <div style={{ position:"relative", marginBottom:14 }}>
-          <span style={{ position:"absolute", left:16, top:"50%", transform:"translateY(-50%)", fontSize:20, color:"#00C8F0", zIndex:1 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C8F0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </span>
-          <input ref={inputRef} className="search-input" value={q} onChange={e=>handle(e.target.value)} onKeyDown={e=>e.key==="Escape"&&onClose()} placeholder="Search products, brands…" />
-          <button onClick={onClose} style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)", background:"rgba(255,255,255,0.06)", border:"1px solid #141928", color:"#8A9BBD", borderRadius:7, padding:"3px 9px", fontSize:11, cursor:"pointer" }}>ESC</button>
-        </div>
-        {results.length > 0 && (
-          <div style={{ background:"rgba(8,10,22,0.98)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:14, overflow:"hidden", boxShadow:"0 18px 55px rgba(0,0,0,0.6)" }}>
-            {results.map(p => (
-              <div key={p.id} onClick={() => { onNavigate("product",{product:p}); onClose(); }}
-                style={{ padding:"11px 16px", display:"flex", alignItems:"center", gap:12, cursor:"pointer", borderBottom:"1px solid #0D1524", transition:"background 0.12s" }}
-                onMouseEnter={e=>e.currentTarget.style.background="rgba(0,128,238,0.08)"}
-                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                <img src={p.image} alt="" style={{ width:44, height:44, objectFit:"contain", borderRadius:9, border:"1px solid #141928", flexShrink:0, background:"#060A16", padding:2 }}
-                  onError={e=>{e.target.src=CAT_FALLBACK[p.category]||"https://placehold.co/100x100/0B0F1E/00C8F0?text=P";}} />
-                <div style={{ flex:1, minWidth:0 }}>
-                  <p style={{ fontSize:13, fontWeight:500, color:"#D0DEFF", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</p>
-                  <p style={{ fontSize:11, color:"#4E5F7A" }}>{p.brand} • {CATEGORIES.find(c=>c.id===p.category)?.name}</p>
-                </div>
-                <span className="price-tag" style={{ fontSize:14, color:"#00C8F0", flexShrink:0 }}>{fp(Math.round(p.price*(1-p.discount/100)))}</span>
-              </div>
-            ))}
-          </div>
+    <div>
+      <div style={{ position:"relative" }}>
+        <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input ref={inputRef} value={q} onChange={e => handle(e.target.value)}
+          onKeyDown={e => e.key === "Escape" && onClose()}
+          placeholder="Search products, brands…"
+          style={{ width:"100%", background:"rgba(17,24,39,0.9)", border:"1.5px solid #1F2937", color:"#F0F4FF",
+            padding:"10px 36px 10px 38px", borderRadius:10, fontSize:14, outline:"none",
+            fontFamily:"'Inter',sans-serif", transition:"border-color 0.2s" }}
+          onFocus={e => e.target.style.borderColor="#2563EB"}
+          onBlur={e => e.target.style.borderColor="#1F2937"}
+        />
+        {q && (
+          <button onClick={() => { setQ(""); setResults([]); inputRef.current?.focus(); }}
+            style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)",
+              background:"rgba(255,255,255,0.07)", border:"none", color:"#9CA3AF", borderRadius:5,
+              width:20, height:20, cursor:"pointer", display:"flex", alignItems:"center",
+              justifyContent:"center", fontSize:13 }}>×</button>
         )}
-        {q && results.length === 0 && (
-          <div style={{ background:"rgba(8,10,22,0.98)", border:"1px solid #141928", borderRadius:14, padding:"22px", textAlign:"center", color:"#4E5F7A" }}>
-            No results for "<span style={{ color:"#00C8F0" }}>{q}</span>"
-          </div>
-        )}
-        <p style={{ textAlign:"center", marginTop:10, fontSize:11, color:"#4E5F7A" }}>Press ESC or click outside to close</p>
       </div>
+      {results.length > 0 && (
+        <div style={{ background:"#0F1628", border:"1px solid rgba(37,99,235,0.18)", borderRadius:12,
+          overflow:"hidden", marginTop:8, boxShadow:"0 12px 36px rgba(0,0,0,0.5)" }}>
+          {results.map(p => (
+            <div key={p.id} onClick={() => pick(p)}
+              style={{ padding:"9px 12px", display:"flex", alignItems:"center", gap:10, cursor:"pointer",
+                borderBottom:"1px solid #1A2235", transition:"background 0.12s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(37,99,235,0.08)"}
+              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+              <img src={p.image} alt="" style={{ width:38, height:38, objectFit:"contain",
+                borderRadius:7, border:"1px solid #1F2937", background:"#0B0F19", padding:2, flexShrink:0 }}
+                onError={e => { e.target.src = CAT_FALLBACK[p.category] || "https://placehold.co/80x80/111827/22D3EE?text=P"; }} />
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:13, fontWeight:500, color:"#F0F4FF", overflow:"hidden",
+                  textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</p>
+                <p style={{ fontSize:11, color:"#6B7280" }}>{p.brand}</p>
+              </div>
+              <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:13, color:"#22D3EE", flexShrink:0 }}>
+                {fp(Math.round(p.price * (1 - p.discount / 100)))}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {q && results.length === 0 && (
+        <div style={{ background:"#0F1628", border:"1px solid #1F2937", borderRadius:10,
+          padding:"16px", textAlign:"center", color:"#6B7280", fontSize:13, marginTop:8 }}>
+          No results for &ldquo;<span style={{ color:"#22D3EE" }}>{q}</span>&rdquo;
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── INLINE NAVBAR SEARCH BAR ────────────────────────────────────────────────
+function NavSearchBar({ onNavigate }) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState([]);
+  const [focused, setFocused] = useState(false);
+  const wrapRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const handle = v => {
+    setQ(v);
+    if (v.trim().length > 0) {
+      setResults(
+        ALL_PRODUCTS.filter(p =>
+          p.name.toLowerCase().includes(v.toLowerCase()) ||
+          p.brand.toLowerCase().includes(v.toLowerCase())
+        ).slice(0, 8)
+      );
+    } else {
+      setResults([]);
+    }
+  };
+
+  const clear = () => { setQ(""); setResults([]); inputRef.current?.focus(); };
+
+  const pick = p => { onNavigate("product", { product: p }); setQ(""); setResults([]); setFocused(false); };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = e => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setFocused(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const showDropdown = focused && (results.length > 0 || (q.trim().length > 0 && results.length === 0));
+
+  return (
+    <div className="nav-search-wrap hide-mobile" ref={wrapRef}>
+      {/* Search icon */}
+      <span className="nav-search-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke={focused ? "#22D3EE" : "#6B7280"} strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+          style={{ transition:"stroke 0.25s" }}>
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </span>
+
+      <input
+        ref={inputRef}
+        className="nav-search-input"
+        value={q}
+        onChange={e => handle(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onKeyDown={e => { if (e.key === "Escape") { setFocused(false); setQ(""); setResults([]); } }}
+        placeholder="Search products, brands…"
+        autoComplete="off"
+      />
+
+      {/* Clear button */}
+      {q && (
+        <button className="nav-search-clear" onClick={clear} title="Clear">×</button>
+      )}
+
+      {/* Inline dropdown */}
+      {showDropdown && (
+        <div className="nav-search-dropdown">
+          {results.length > 0 ? (
+            <>
+              {results.map(p => (
+                <div key={p.id} className="nav-search-item" onClick={() => pick(p)}>
+                  <img
+                    src={p.image} alt=""
+                    style={{ width:42, height:42, objectFit:"contain", borderRadius:8,
+                      border:"1px solid #1F2937", flexShrink:0, background:"#0B0F19", padding:3 }}
+                    onError={e => { e.target.src = CAT_FALLBACK[p.category] || "https://placehold.co/100x100/111827/22D3EE?text=P"; }}
+                  />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:13, fontWeight:500, color:"#F0F4FF",
+                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      {p.name}
+                    </p>
+                    <p style={{ fontSize:11, color:"#6B7280", marginTop:2 }}>
+                      {p.brand} &bull; {CATEGORIES.find(c => c.id === p.category)?.name}
+                    </p>
+                  </div>
+                  <span className="price-tag" style={{ fontSize:14, color:"#22D3EE", flexShrink:0 }}>
+                    {fp(Math.round(p.price * (1 - p.discount / 100)))}
+                  </span>
+                </div>
+              ))}
+              <div className="nav-search-footer">
+                {results.length} result{results.length !== 1 ? "s" : ""} for &ldquo;{q}&rdquo;
+              </div>
+            </>
+          ) : (
+            <div style={{ padding:"20px 16px", textAlign:"center", color:"#6B7280", fontSize:13 }}>
+              No results for &ldquo;<span style={{ color:"#22D3EE" }}>{q}</span>&rdquo;
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -950,7 +1144,7 @@ function MegaMenu({ onNavigate }) {
           <div key={b.id} className="mega-item" onClick={() => onNavigate("brands")}>
             <span style={{ width:22, height:22, background:`${b.color}20`, border:`1px solid ${b.color}40`, borderRadius:"50%", display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:b.color, flexShrink:0 }}>{b.logo}</span>
             <span>{b.name}</span>
-            <span style={{ marginLeft:"auto", fontSize:10, color:"#4E5F7A" }}>{b.country}</span>
+            <span style={{ marginLeft:"auto", fontSize:10, color:"#6B7280" }}>{b.country}</span>
           </div>
         ))}
       </div>
@@ -959,19 +1153,19 @@ function MegaMenu({ onNavigate }) {
         <p className="mega-menu-title">Featured</p>
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
           {[
-            { label:"⚡ Flash Deals", desc:"Up to 40% off", page:"deals", badge:"HOT", color:"#F03060" },
-            { label:"📱 New Mobiles", desc:"Latest launches", page:"category", cat:"mobiles", badge:"NEW", color:"#00C8F0" },
-            { label:"💻 Gaming Laptops", desc:"High performance", page:"category", cat:"laptops", badge:"TOP", color:"#6457FF" },
-            { label:"🎧 Best Earbuds", desc:"ANC & premium", page:"category", cat:"headphones", badge:"PICK", color:"#00D97A" },
+            { label:"⚡ Flash Deals", desc:"Up to 40% off", page:"deals", badge:"HOT", color:"#EF4444" },
+            { label:"📱 New Mobiles", desc:"Latest launches", page:"category", cat:"mobiles", badge:"NEW", color:"#22D3EE" },
+            { label:"💻 Gaming Laptops", desc:"High performance", page:"category", cat:"laptops", badge:"TOP", color:"#8B5CF6" },
+            { label:"🎧 Best Earbuds", desc:"ANC & premium", page:"category", cat:"headphones", badge:"PICK", color:"#10B981" },
           ].map(item => (
             <div key={item.label}
               onClick={() => item.cat ? onNavigate(item.page,{cat:item.cat}) : onNavigate(item.page)}
-              style={{ background:"rgba(0,128,238,0.06)", border:"1px solid #141928", borderRadius:10, padding:"10px 12px", cursor:"pointer", transition:"all 0.18s", display:"flex", alignItems:"center", gap:10 }}
-              onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.12)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.2)";}}
-              onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.06)"; e.currentTarget.style.borderColor="#141928";}}>
+              style={{ background:"rgba(37,99,235,0.06)", border:"1px solid #1F2937", borderRadius:10, padding:"10px 12px", cursor:"pointer", transition:"all 0.18s", display:"flex", alignItems:"center", gap:10 }}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(37,99,235,0.12)"; e.currentTarget.style.borderColor="rgba(37,99,235,0.2)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(37,99,235,0.06)"; e.currentTarget.style.borderColor="#1F2937";}}>
               <div style={{ flex:1 }}>
-                <p style={{ fontSize:12, fontWeight:600, color:"#D0DEFF" }}>{item.label}</p>
-                <p style={{ fontSize:10, color:"#4E5F7A" }}>{item.desc}</p>
+                <p style={{ fontSize:12, fontWeight:600, color:"#E8EEFF" }}>{item.label}</p>
+                <p style={{ fontSize:10, color:"#6B7280" }}>{item.desc}</p>
               </div>
               <span className="badge" style={{ background:`${item.color}18`, color:item.color, border:`1px solid ${item.color}30` }}>{item.badge}</span>
             </div>
@@ -1008,24 +1202,24 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
       <div className="hero-bg" style={{ padding:"90px 0 72px" }}>
         <div className="section-wrap" style={{ textAlign:"center" }}>
           <div style={{ maxWidth:680, margin:"0 auto" }}>
-            <p style={{ fontSize:11, fontWeight:700, letterSpacing:5, color:"#0080EE", textTransform:"uppercase", marginBottom:18, opacity:heroVis?1:0, transition:"opacity 0.6s ease 0.1s" }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:5, color:"#2563EB", textTransform:"uppercase", marginBottom:18, opacity:heroVis?1:0, transition:"opacity 0.6s ease 0.1s" }}>
               ⚡ Karnataka's #1 Electronics Store
             </p>
-            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:"clamp(38px,7.5vw,82px)", fontWeight:800, lineHeight:1.03, marginBottom:22, opacity:heroVis?1:0, transform:heroVis?"translateY(0)":"translateY(28px)", transition:"all 0.85s cubic-bezier(0.22,1,0.36,1) 0.2s" }}>
+            <h1 style={{ fontFamily:"'Outfit',sans-serif", fontSize:"clamp(38px,7.5vw,82px)", fontWeight:800, lineHeight:1.03, marginBottom:22, opacity:heroVis?1:0, transform:heroVis?"translateY(0)":"translateY(28px)", transition:"all 0.85s cubic-bezier(0.22,1,0.36,1) 0.2s" }}>
               <span className="gradient-text">Power Up</span>
-              <br /><span style={{ color:"#E2ECFF" }}>Your World</span>
+              <br /><span style={{ color:"#F0F4FF" }}>Your World</span>
             </h1>
-            <p style={{ fontSize:17, color:"#4E5F7A", maxWidth:480, margin:"0 auto 36px", lineHeight:1.7, opacity:heroVis?1:0, transition:"opacity 0.8s ease 0.4s" }}>
+            <p style={{ fontSize:17, color:"#6B7280", maxWidth:480, margin:"0 auto 36px", lineHeight:1.7, opacity:heroVis?1:0, transition:"opacity 0.8s ease 0.4s" }}>
               Premium electronics, unbeatable prices. Smartphones to Smart TVs — everything tech, all in one place.
             </p>
             <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap", opacity:heroVis?1:0, transition:"opacity 0.8s ease 0.5s" }}>
-              <button className="neon-glow-btn" style={{ padding:"14px 32px", fontSize:15, fontFamily:"'Syne',sans-serif" }} onClick={() => onCategoryClick("mobiles")}>Shop Now →</button>
+              <button className="neon-glow-btn" style={{ padding:"14px 32px", fontSize:15, fontFamily:"'Outfit',sans-serif" }} onClick={() => onCategoryClick("mobiles")}>Shop Now →</button>
               <button className="btn-secondary" style={{ padding:"14px 32px", fontSize:15 }} onClick={onDealsPage}>View Deals ⚡</button>
             </div>
             <div style={{ display:"flex", gap:40, justifyContent:"center", marginTop:56, flexWrap:"wrap", opacity:heroVis?1:0, transition:"opacity 0.9s ease 0.6s" }}>
               {[["10K+","Products"],["50K+","Customers"],["5 ★","Avg Rating"],["Free","Delivery"]].map(([v,l]) => (
                 <div key={l} style={{ textAlign:"center", animation:heroVis?"countUp 0.8s ease both":"none" }}>
-                  <p className="price-tag" style={{ fontSize:26, background:"linear-gradient(135deg,#00C8F0,#6457FF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{v}</p>
+                  <p className="price-tag" style={{ fontSize:26, background:"linear-gradient(135deg,#22D3EE,#8B5CF6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{v}</p>
                   <p style={{ fontSize:11, color:"#2E3E58", marginTop:3 }}>{l}</p>
                 </div>
               ))}
@@ -1034,7 +1228,7 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
         </div>
         {/* Decorative orbs */}
         {[...Array(5)].map((_,i) => (
-          <div key={i} style={{ position:"absolute", width:6+i*3, height:6+i*3, borderRadius:"50%", background:`rgba(${i%2===0?"0,128,238":"100,87,255"},0.3)`, top:`${12+i*14}%`, left:`${5+i*16}%`, animation:`float ${3+i*0.4}s ease-in-out infinite`, animationDelay:`${i*0.4}s`, pointerEvents:"none" }} />
+          <div key={i} style={{ position:"absolute", width:6+i*3, height:6+i*3, borderRadius:"50%", background:`rgba(${i%2===0?"37,99,235":"100,87,255"},0.3)`, top:`${12+i*14}%`, left:`${5+i*16}%`, animation:`float ${3+i*0.4}s ease-in-out infinite`, animationDelay:`${i*0.4}s`, pointerEvents:"none" }} />
         ))}
       </div>
 
@@ -1042,15 +1236,15 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
       <div style={{ padding:"56px 0 44px", width:"100%" }}>
         <div className="section-wrap">
           <h2 className="section-title" style={{ marginBottom:6 }}>Shop by <span className="gradient-text">Category</span></h2>
-          <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:28 }}>Browse our wide range of premium electronics</p>
+          <p style={{ color:"#6B7280", fontSize:13, marginBottom:28 }}>Browse our wide range of premium electronics</p>
           <div className="cat-grid">
             {CATEGORIES.map((c,idx) => (
               <div key={c.id} onClick={() => onCategoryClick(c.id)}
-                style={{ background:"#0B0F1E", border:"1px solid #141928", borderRadius:14, padding:"20px 10px", textAlign:"center", cursor:"pointer", transition:"all 0.3s ease" }}
+                style={{ background:"#111827", border:"1px solid #1F2937", borderRadius:14, padding:"20px 10px", textAlign:"center", cursor:"pointer", transition:"all 0.3s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor=c.color; e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.background=`${c.color}0D`; e.currentTarget.style.boxShadow=`0 12px 32px ${c.color}1A`; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor="#141928"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.background="#0B0F1E"; e.currentTarget.style.boxShadow="none"; }}>
+                onMouseLeave={e => { e.currentTarget.style.borderColor="#1F2937"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.background="#111827"; e.currentTarget.style.boxShadow="none"; }}>
                 <div style={{ fontSize:28, marginBottom:10, animation:`float ${3+idx*0.2}s ease-in-out infinite`, animationDelay:`${idx*0.2}s` }}>{c.icon}</div>
-                <p style={{ fontSize:11, fontWeight:600, color:"#8A9BBD" }}>{c.name}</p>
+                <p style={{ fontSize:11, fontWeight:600, color:"#9CA3AF" }}>{c.name}</p>
               </div>
             ))}
           </div>
@@ -1063,7 +1257,7 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
           <div style={{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", marginBottom:26 }}>
             <div>
               <h2 className="section-title"><span className="gradient-text-warm">⚡ Flash</span> Deals</h2>
-              <p style={{ fontSize:12, color:"#4E5F7A", marginTop:4 }}>Limited-time offers — grab them before they expire!</p>
+              <p style={{ fontSize:12, color:"#6B7280", marginTop:4 }}>Limited-time offers — grab them before they expire!</p>
             </div>
             <button className="btn-secondary" onClick={onDealsPage} style={{ marginLeft:"auto" }}>See All Deals →</button>
           </div>
@@ -1074,19 +1268,19 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
                   <img src={p.image} alt={p.name} loading="lazy"
                     onError={e=>{e.target.src=CAT_FALLBACK[p.category]||`https://placehold.co/600x600/0B0F1E/F03060?text=Deal`;}} />
                   <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,7,15,0.65) 0%, transparent 50%)", pointerEvents:"none" }} />
-                  <div style={{ position:"absolute", top:10, left:10, background:"linear-gradient(135deg,#F03060,#FF6B35)", color:"#fff", borderRadius:7, padding:"4px 10px", fontSize:11, fontWeight:800 }}>DEAL -{p.discount+5}%</div>
+                  <div style={{ position:"absolute", top:10, left:10, background:"linear-gradient(135deg,#EF4444,#FF6B35)", color:"#fff", borderRadius:7, padding:"4px 10px", fontSize:11, fontWeight:800 }}>DEAL -{p.discount+5}%</div>
                   <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"5px 12px" }}>
-                    <p style={{ fontSize:10, fontWeight:700, color:"#F03060", textTransform:"uppercase", letterSpacing:1.2 }}>{p.brand}</p>
+                    <p style={{ fontSize:10, fontWeight:700, color:"#EF4444", textTransform:"uppercase", letterSpacing:1.2 }}>{p.brand}</p>
                   </div>
                 </div>
                 <div className="card-body">
-                  <p style={{ fontSize:13, fontWeight:600, color:"#D0DEFF", marginBottom:6, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{p.name}</p>
+                  <p style={{ fontSize:13, fontWeight:600, color:"#E8EEFF", marginBottom:6, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{p.name}</p>
                   <div style={{ display:"flex", alignItems:"baseline", gap:8, marginBottom:6 }}>
-                    <span className="price-tag" style={{ fontSize:18, color:"#F03060" }}>{fp(p.dealPrice)}</span>
+                    <span className="price-tag" style={{ fontSize:18, color:"#EF4444" }}>{fp(p.dealPrice)}</span>
                     <span style={{ fontSize:11, color:"#2E4060", textDecoration:"line-through" }}>{fp(p.price)}</span>
                   </div>
                   <div style={{ marginTop:"auto" }}>
-                    <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:6 }}>Ends in:</p>
+                    <p style={{ fontSize:10, color:"#6B7280", marginBottom:6 }}>Ends in:</p>
                     <CountdownTimer endTime={p.endTime} />
                   </div>
                 </div>
@@ -1100,7 +1294,7 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
       <div style={{ padding:"52px 0", width:"100%", background:"#060912" }}>
         <div className="section-wrap">
           <h2 className="section-title" style={{ marginBottom:6 }}>Shop by <span className="gradient-text">Brand</span></h2>
-          <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:26 }}>Click a brand to explore their products</p>
+          <p style={{ color:"#6B7280", fontSize:13, marginBottom:26 }}>Click a brand to explore their products</p>
           <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:28 }}>
             {selectedBrand && (
               <button onClick={() => setSelectedBrand(null)}
@@ -1110,9 +1304,9 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
             )}
             {featuredBrands.map(b => (
               <button key={b.id} onClick={() => setSelectedBrand(selectedBrand===b.name ? null : b.name)}
-                style={{ display:"flex", alignItems:"center", gap:7, padding:"7px 15px", background:selectedBrand===b.name?`${b.color}18`:"#0B0F1E", border:`1px solid ${selectedBrand===b.name?b.color:"#141928"}`, borderRadius:9, cursor:"pointer", transition:"all 0.22s", color:selectedBrand===b.name?b.color:"#8A9BBD", fontSize:13, fontWeight:500 }}
-                onMouseEnter={e=>{if(selectedBrand!==b.name){e.currentTarget.style.borderColor=`${b.color}60`;e.currentTarget.style.color="#D0DEFF";}}}
-                onMouseLeave={e=>{if(selectedBrand!==b.name){e.currentTarget.style.borderColor="#141928";e.currentTarget.style.color="#8A9BBD";}}}>
+                style={{ display:"flex", alignItems:"center", gap:7, padding:"7px 15px", background:selectedBrand===b.name?`${b.color}18`:"#111827", border:`1px solid ${selectedBrand===b.name?b.color:"#1F2937"}`, borderRadius:9, cursor:"pointer", transition:"all 0.22s", color:selectedBrand===b.name?b.color:"#9CA3AF", fontSize:13, fontWeight:500 }}
+                onMouseEnter={e=>{if(selectedBrand!==b.name){e.currentTarget.style.borderColor=`${b.color}60`;e.currentTarget.style.color="#E8EEFF";}}}
+                onMouseLeave={e=>{if(selectedBrand!==b.name){e.currentTarget.style.borderColor="#1F2937";e.currentTarget.style.color="#9CA3AF";}}}>
                 <span style={{ width:20, height:20, background:`${b.color}20`, border:`1px solid ${b.color}35`, borderRadius:"50%", display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:800, color:b.color }}>{b.logo}</span>
                 {b.name}
               </button>
@@ -1121,7 +1315,7 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
           {selectedBrand && brandProducts.length > 0 && (
             <div style={{ animation:"fadeInUp 0.35s ease" }}>
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
-                <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:700 }}>
+                <h3 style={{ fontFamily:"'Outfit',sans-serif", fontSize:18, fontWeight:700 }}>
                   <span className="gradient-text">{selectedBrand}</span> Products
                 </h3>
                 <span className="badge badge-blue">{brandProducts.length} shown</span>
@@ -1141,7 +1335,7 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
       <div style={{ padding:"52px 0 72px", width:"100%" }}>
         <div className="section-wrap">
           <h2 className="section-title" style={{ marginBottom:6 }}>Top <span className="gradient-text">Selling</span></h2>
-          <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:28 }}>Most popular picks this week</p>
+          <p style={{ color:"#6B7280", fontSize:13, marginBottom:28 }}>Most popular picks this week</p>
           <div className="product-grid">
             {loading ? [0,1,2,3,4,5,6,7].map(i=><SkeletonCard key={i} />) : topSelling.map(p=>(
               <ProductCard key={p.id} product={p} onAddCart={onAddCart} onWishlist={onWishlist} onCompare={onCompare} onView={onView} wishlisted={wishlist.some(w=>w.id===p.id)} inCompare={compareList.some(c=>c.id===p.id)} />
@@ -1156,10 +1350,10 @@ function HomePage({ products, onAddCart, onWishlist, onCompare, onView, wishlist
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:24 }}>
             {[["🚚","Free Delivery","Free shipping on all orders across India"],["🔒","Secure Payment","100% safe & encrypted transactions"],["🔄","Easy Returns","Hassle-free 7-day return policy"],["⚡","Fast Support","24/7 customer care team"],["🏷️","Best Prices","Price match guarantee on all products"],["✅","100% Genuine","Authorized dealer for all brands"]].map(([ic,t,d]) => (
               <div key={t} style={{ display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center", gap:10 }}>
-                <div style={{ width:50, height:50, background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:14, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, transition:"all 0.25s" }}
-                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.16)"; e.currentTarget.style.transform="scale(1.08)";}}
-                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.09)"; e.currentTarget.style.transform="scale(1)";}}>{ic}</div>
-                <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, color:"#C8D8F0" }}>{t}</p>
+                <div style={{ width:50, height:50, background:"rgba(37,99,235,0.09)", border:"1px solid rgba(37,99,235,0.18)", borderRadius:14, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, transition:"all 0.25s" }}
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(37,99,235,0.16)"; e.currentTarget.style.transform="scale(1.08)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(37,99,235,0.09)"; e.currentTarget.style.transform="scale(1)";}}>{ic}</div>
+                <p style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, color:"#D5E4F5" }}>{t}</p>
                 <p style={{ fontSize:11, color:"#2E3E58", lineHeight:1.55 }}>{d}</p>
               </div>
             ))}
@@ -1194,11 +1388,11 @@ function CategoryPage({ category, products, onAddCart, onWishlist, onCompare, on
       <div className="section-wrap">
         <div style={{ marginBottom:24 }}>
           <h1 className="section-title" style={{ fontSize:32 }}>{catInfo?.icon} <span className="gradient-text">{catInfo?.name || category}</span></h1>
-          <p style={{ color:"#4E5F7A", fontSize:13, marginTop:5 }}>{filtered.length} products found</p>
+          <p style={{ color:"#6B7280", fontSize:13, marginTop:5 }}>{filtered.length} products found</p>
         </div>
         <div style={{ display:"flex", gap:10, marginBottom:24, flexWrap:"wrap", alignItems:"center" }}>
           <div style={{ position:"relative", flex:"1 1 200px", maxWidth:300 }}>
-            <span style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", color:"#4E5F7A", fontSize:13 }}>🔍</span>
+            <span style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", color:"#6B7280", fontSize:13 }}>🔍</span>
             <input className="input-premium" placeholder="Search products…" value={filters.search} onChange={e=>setFilters(f=>({...f,search:e.target.value}))} style={{ paddingLeft:34 }} />
           </div>
           <select className="input-premium" value={filters.brand} onChange={e=>setFilters(f=>({...f,brand:e.target.value}))} style={{ width:"auto", paddingLeft:13 }}>
@@ -1215,7 +1409,7 @@ function CategoryPage({ category, products, onAddCart, onWishlist, onCompare, on
         {filtered.length === 0 ? (
           <div style={{ textAlign:"center", padding:"72px 0" }}>
             <div style={{ fontSize:52, marginBottom:14 }}>😕</div>
-            <p style={{ color:"#4E5F7A" }}>No products found. Try adjusting filters.</p>
+            <p style={{ color:"#6B7280" }}>No products found. Try adjusting filters.</p>
           </div>
         ) : (
           <div className="product-grid">
@@ -1237,57 +1431,57 @@ function ProductDetailPage({ product, onAddCart, onWishlist, wishlisted, onBack,
   return (
     <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
       <div className="section-wrap">
-        <button onClick={onBack} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:13, cursor:"pointer", marginBottom:24, display:"flex", alignItems:"center", gap:5, transition:"color 0.2s" }} onMouseEnter={e=>e.currentTarget.style.color="#00C8F0"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>← Back</button>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"#6B7280", fontSize:13, cursor:"pointer", marginBottom:24, display:"flex", alignItems:"center", gap:5, transition:"color 0.2s" }} onMouseEnter={e=>e.currentTarget.style.color="#22D3EE"} onMouseLeave={e=>e.currentTarget.style.color="#6B7280"}>← Back</button>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:42 }} className="grid-mobile-1">
           <div>
-            <div style={{ background:"#08101E", borderRadius:18, overflow:"hidden", border:"1px solid #141928", aspectRatio:"4/3" }}>
+            <div style={{ background:"#08101E", borderRadius:18, overflow:"hidden", border:"1px solid #1F2937", aspectRatio:"4/3" }}>
               <img src={product.image} alt={product.name} style={{ width:"100%", height:"100%", objectFit:"contain", padding:12 }}
                 onError={e=>{e.target.src=CAT_FALLBACK[product.category]||`https://placehold.co/600x450/0B0F1E/00C8F0?text=${encodeURIComponent(product.name)}`;}} />
             </div>
             <div style={{ display:"flex", gap:9, marginTop:12 }}>
               {[0,1,2].map(i => (
-                <div key={i} style={{ flex:1, background:"#08101E", border:"1px solid #141928", borderRadius:12, overflow:"hidden", opacity:i===0?1:0.45, cursor:"pointer", aspectRatio:"1", transition:"opacity 0.2s" }} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=i===0?1:0.45}>
+                <div key={i} style={{ flex:1, background:"#08101E", border:"1px solid #1F2937", borderRadius:12, overflow:"hidden", opacity:i===0?1:0.45, cursor:"pointer", aspectRatio:"1", transition:"opacity 0.2s" }} onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=i===0?1:0.45}>
                   <img src={product.image} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>{e.target.src=`https://placehold.co/200x200/0B0F1E/00C8F0?text=IMG`;}} />
                 </div>
               ))}
             </div>
           </div>
           <div>
-            <p style={{ fontSize:11, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1.5, marginBottom:9 }}>{product.brand} • {CATEGORIES.find(c=>c.id===product.category)?.name}</p>
-            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:26, fontWeight:800, lineHeight:1.22, marginBottom:13, color:"#E2ECFF" }}>{product.name}</h1>
+            <p style={{ fontSize:11, color:"#6B7280", textTransform:"uppercase", letterSpacing:1.5, marginBottom:9 }}>{product.brand} • {CATEGORIES.find(c=>c.id===product.category)?.name}</p>
+            <h1 style={{ fontFamily:"'Outfit',sans-serif", fontSize:26, fontWeight:800, lineHeight:1.22, marginBottom:13, color:"#F0F4FF" }}>{product.name}</h1>
             <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:14 }}>
               <Stars rating={product.rating} size={15} />
-              <span style={{ fontSize:13, color:"#4E5F7A" }}>{product.rating} ({product.reviews} reviews)</span>
+              <span style={{ fontSize:13, color:"#6B7280" }}>{product.rating} ({product.reviews} reviews)</span>
             </div>
             <p style={{ fontSize:13, color:"#5A6A80", lineHeight:1.7, marginBottom:18 }}>{product.desc}</p>
-            <div className="glass-card" style={{ padding:18, marginBottom:18, borderColor:"rgba(0,200,240,0.12)" }}>
+            <div className="glass-card" style={{ padding:18, marginBottom:18, borderColor:"rgba(37,99,235,0.12)" }}>
               <span className="badge badge-red" style={{ marginBottom:10, display:"inline-block" }}>-{product.discount}% OFF</span>
               <div style={{ display:"flex", alignItems:"baseline", gap:12 }}>
-                <span className="price-tag" style={{ fontSize:35, background:"linear-gradient(135deg,#00C8F0,#6457FF)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{fp(dp)}</span>
+                <span className="price-tag" style={{ fontSize:35, background:"linear-gradient(135deg,#22D3EE,#8B5CF6)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>{fp(dp)}</span>
                 <span style={{ fontSize:14, color:"#2E4060", textDecoration:"line-through" }}>{fp(product.price)}</span>
               </div>
-              <p style={{ fontSize:12, color:"#00D97A", marginTop:6 }}>You save {fp(product.price - dp)}</p>
+              <p style={{ fontSize:12, color:"#10B981", marginTop:6 }}>You save {fp(product.price - dp)}</p>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
-              <p style={{ fontSize:13, color:"#4E5F7A" }}>Qty:</p>
-              <div style={{ display:"flex", alignItems:"center", background:"#090D1C", border:"1px solid #141928", borderRadius:9, overflow:"hidden" }}>
-                <button onClick={() => setQty(Math.max(1,qty-1))} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"8px 14px", fontSize:17, cursor:"pointer" }}>−</button>
-                <span style={{ padding:"0 12px", fontSize:14, fontWeight:700, color:"#00C8F0" }}>{qty}</span>
-                <button onClick={() => setQty(Math.min(product.stock,qty+1))} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"8px 14px", fontSize:17, cursor:"pointer" }}>+</button>
+              <p style={{ fontSize:13, color:"#6B7280" }}>Qty:</p>
+              <div style={{ display:"flex", alignItems:"center", background:"#090D1C", border:"1px solid #1F2937", borderRadius:9, overflow:"hidden" }}>
+                <button onClick={() => setQty(Math.max(1,qty-1))} style={{ background:"none", border:"none", color:"#F0F4FF", padding:"8px 14px", fontSize:17, cursor:"pointer" }}>−</button>
+                <span style={{ padding:"0 12px", fontSize:14, fontWeight:700, color:"#22D3EE" }}>{qty}</span>
+                <button onClick={() => setQty(Math.min(product.stock,qty+1))} style={{ background:"none", border:"none", color:"#F0F4FF", padding:"8px 14px", fontSize:17, cursor:"pointer" }}>+</button>
               </div>
               <span className={`badge ${product.stock>5?"badge-green":"badge-red"}`}>{product.stock>5?"✓ In Stock":`Only ${product.stock} left`}</span>
             </div>
             <div style={{ display:"flex", gap:9, marginBottom:18, flexWrap:"wrap" }}>
               <button className="btn-primary" style={{ flex:"1 1 140px", padding:13, fontSize:14 }} onClick={() => onAddCart({...product,qty})}>🛒 Add to Cart</button>
-              <button onClick={() => onWishlist(product)} style={{ padding:"13px 16px", background:"#090D1C", border:`1px solid ${wishlisted?"#F03060":"#141928"}`, borderRadius:10, color:wishlisted?"#F03060":"#4E5F7A", fontSize:19, transition:"all 0.2s", cursor:"pointer" }}>{wishlisted?"❤️":"🤍"}</button>
-              <button onClick={() => onCompare(product)} style={{ padding:"13px 16px", background:inCompare?"rgba(0,128,238,0.1)":"#090D1C", border:`1px solid ${inCompare?"#00C8F0":"#141928"}`, borderRadius:10, color:inCompare?"#00C8F0":"#4E5F7A", fontSize:13, fontWeight:500, transition:"all 0.2s", cursor:"pointer" }}>⊞ Compare</button>
+              <button onClick={() => onWishlist(product)} style={{ padding:"13px 16px", background:"#090D1C", border:`1px solid ${wishlisted?"#EF4444":"#1F2937"}`, borderRadius:10, color:wishlisted?"#EF4444":"#6B7280", fontSize:19, transition:"all 0.2s", cursor:"pointer" }}>{wishlisted?"❤️":"🤍"}</button>
+              <button onClick={() => onCompare(product)} style={{ padding:"13px 16px", background:inCompare?"rgba(37,99,235,0.1)":"#090D1C", border:`1px solid ${inCompare?"#22D3EE":"#1F2937"}`, borderRadius:10, color:inCompare?"#22D3EE":"#6B7280", fontSize:13, fontWeight:500, transition:"all 0.2s", cursor:"pointer" }}>⊞ Compare</button>
             </div>
-            <div style={{ background:"#070B18", border:"1px solid #141928", borderRadius:13, padding:16 }}>
-              <p style={{ fontSize:11, fontWeight:700, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1.2, marginBottom:13 }}>Specifications</p>
+            <div style={{ background:"#070B18", border:"1px solid #1F2937", borderRadius:13, padding:16 }}>
+              <p style={{ fontSize:11, fontWeight:700, color:"#6B7280", textTransform:"uppercase", letterSpacing:1.2, marginBottom:13 }}>Specifications</p>
               {Object.entries(product.specs).map(([k,v]) => (
                 <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid #0C1220" }}>
-                  <span style={{ fontSize:12, color:"#4E5F7A", textTransform:"capitalize" }}>{k}</span>
-                  <span style={{ fontSize:12, fontWeight:500, color:"#C8D8F0" }}>{v}</span>
+                  <span style={{ fontSize:12, color:"#6B7280", textTransform:"capitalize" }}>{k}</span>
+                  <span style={{ fontSize:12, fontWeight:500, color:"#D5E4F5" }}>{v}</span>
                 </div>
               ))}
             </div>
@@ -1305,8 +1499,8 @@ function CartPage({ cart, onUpdateQty, onRemove, onCheckout, isLoggedIn, onLogin
   if (!isLoggedIn) return (
     <div style={{ textAlign:"center", padding:"80px 24px" }}>
       <div style={{ fontSize:60, marginBottom:18 }}>🔐</div>
-      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:12 }}>Login Required</h2>
-      <p style={{ color:"#4E5F7A", marginBottom:24 }}>Please save your profile to view cart and place orders</p>
+      <h2 style={{ fontFamily:"'Outfit',sans-serif", fontSize:24, marginBottom:12 }}>Login Required</h2>
+      <p style={{ color:"#6B7280", marginBottom:24 }}>Please save your profile to view cart and place orders</p>
       <button className="btn-primary" onClick={onLoginRequired} style={{ padding:"12px 32px" }}>Save Profile Now</button>
     </div>
   );
@@ -1314,8 +1508,8 @@ function CartPage({ cart, onUpdateQty, onRemove, onCheckout, isLoggedIn, onLogin
   if (cart.length === 0) return (
     <div style={{ textAlign:"center", padding:"80px 24px" }}>
       <div style={{ fontSize:60, marginBottom:18 }}>🛒</div>
-      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:12 }}>Your Cart is Empty</h2>
-      <p style={{ color:"#4E5F7A" }}>Add some awesome products to get started!</p>
+      <h2 style={{ fontFamily:"'Outfit',sans-serif", fontSize:24, marginBottom:12 }}>Your Cart is Empty</h2>
+      <p style={{ color:"#6B7280" }}>Add some awesome products to get started!</p>
     </div>
   );
 
@@ -1329,36 +1523,36 @@ function CartPage({ cart, onUpdateQty, onRemove, onCheckout, isLoggedIn, onLogin
               const dp = Math.round(item.price*(1-item.discount/100));
               return (
                 <div key={item.id} className="glass-card" style={{ padding:14, display:"flex", gap:13, alignItems:"center" }}>
-                  <img src={item.image} alt={item.name} style={{ width:80, height:80, objectFit:"contain", borderRadius:10, border:"1px solid #141928", flexShrink:0, background:"#060A16", padding:4 }}
+                  <img src={item.image} alt={item.name} style={{ width:80, height:80, objectFit:"contain", borderRadius:10, border:"1px solid #1F2937", flexShrink:0, background:"#060A16", padding:4 }}
                     onError={e=>{e.target.src=CAT_FALLBACK[item.category]||`https://placehold.co/200x200/0B0F1E/00C8F0?text=IMG`;}} />
                   <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ fontSize:13, fontWeight:500, color:"#C8D8F0", marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</p>
-                    <p style={{ fontSize:11, color:"#4E5F7A", marginBottom:8 }}>{item.brand}</p>
+                    <p style={{ fontSize:13, fontWeight:500, color:"#D5E4F5", marginBottom:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</p>
+                    <p style={{ fontSize:11, color:"#6B7280", marginBottom:8 }}>{item.brand}</p>
                     <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                      <div style={{ display:"flex", alignItems:"center", background:"#070B18", border:"1px solid #141928", borderRadius:7, overflow:"hidden" }}>
-                        <button onClick={()=>onUpdateQty(item.id,item.qty-1)} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"4px 10px", cursor:"pointer", fontSize:15 }}>−</button>
-                        <span style={{ padding:"0 9px", fontSize:13, fontWeight:700, color:"#00C8F0" }}>{item.qty}</span>
-                        <button onClick={()=>onUpdateQty(item.id,item.qty+1)} style={{ background:"none", border:"none", color:"#E2ECFF", padding:"4px 10px", cursor:"pointer", fontSize:15 }}>+</button>
+                      <div style={{ display:"flex", alignItems:"center", background:"#070B18", border:"1px solid #1F2937", borderRadius:7, overflow:"hidden" }}>
+                        <button onClick={()=>onUpdateQty(item.id,item.qty-1)} style={{ background:"none", border:"none", color:"#F0F4FF", padding:"4px 10px", cursor:"pointer", fontSize:15 }}>−</button>
+                        <span style={{ padding:"0 9px", fontSize:13, fontWeight:700, color:"#22D3EE" }}>{item.qty}</span>
+                        <button onClick={()=>onUpdateQty(item.id,item.qty+1)} style={{ background:"none", border:"none", color:"#F0F4FF", padding:"4px 10px", cursor:"pointer", fontSize:15 }}>+</button>
                       </div>
-                      <span className="price-tag" style={{ fontSize:15, color:"#00C8F0" }}>{fp(dp*item.qty)}</span>
+                      <span className="price-tag" style={{ fontSize:15, color:"#22D3EE" }}>{fp(dp*item.qty)}</span>
                     </div>
                   </div>
-                  <button onClick={()=>onRemove(item.id)} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:18, cursor:"pointer", transition:"color 0.2s", flexShrink:0 }} onMouseEnter={e=>e.currentTarget.style.color="#F03060"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>✕</button>
+                  <button onClick={()=>onRemove(item.id)} style={{ background:"none", border:"none", color:"#6B7280", fontSize:18, cursor:"pointer", transition:"color 0.2s", flexShrink:0 }} onMouseEnter={e=>e.currentTarget.style.color="#EF4444"} onMouseLeave={e=>e.currentTarget.style.color="#6B7280"}>✕</button>
                 </div>
               );
             })}
           </div>
-          <div className="glass-card" style={{ padding:20, borderColor:"rgba(0,200,240,0.12)" }}>
-            <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, marginBottom:16 }}>Order Summary</h3>
+          <div className="glass-card" style={{ padding:20, borderColor:"rgba(37,99,235,0.12)" }}>
+            <h3 style={{ fontFamily:"'Outfit',sans-serif", fontSize:17, fontWeight:700, marginBottom:16 }}>Order Summary</h3>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-              <span style={{ color:"#4E5F7A", fontSize:13 }}>Items ({cart.reduce((s,i)=>s+i.qty,0)})</span>
+              <span style={{ color:"#6B7280", fontSize:13 }}>Items ({cart.reduce((s,i)=>s+i.qty,0)})</span>
               <span style={{ fontSize:13 }}>{fp(total)}</span>
             </div>
             <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-              <span style={{ color:"#4E5F7A", fontSize:13 }}>Delivery</span>
-              <span style={{ fontSize:13, color:"#00D97A" }}>FREE</span>
+              <span style={{ color:"#6B7280", fontSize:13 }}>Delivery</span>
+              <span style={{ fontSize:13, color:"#10B981" }}>FREE</span>
             </div>
-            <div style={{ borderTop:"1px solid #141928", paddingTop:12, marginTop:8, marginBottom:16 }}>
+            <div style={{ borderTop:"1px solid #1F2937", paddingTop:12, marginTop:8, marginBottom:16 }}>
               <div style={{ display:"flex", justifyContent:"space-between" }}>
                 <span style={{ fontWeight:600 }}>Total</span>
                 <span className="price-tag gradient-text" style={{ fontSize:20 }}>{fp(total)}</span>
@@ -1391,12 +1585,12 @@ function CheckoutPage({ cart, onPlaceOrder, onBack }) {
   return (
     <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
       <div className="section-wrap">
-        <button onClick={onBack} style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:13, cursor:"pointer", marginBottom:22, display:"flex", alignItems:"center", gap:5 }} onMouseEnter={e=>e.currentTarget.style.color="#00C8F0"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>← Back to Cart</button>
+        <button onClick={onBack} style={{ background:"none", border:"none", color:"#6B7280", fontSize:13, cursor:"pointer", marginBottom:22, display:"flex", alignItems:"center", gap:5 }} onMouseEnter={e=>e.currentTarget.style.color="#22D3EE"} onMouseLeave={e=>e.currentTarget.style.color="#6B7280"}>← Back to Cart</button>
         <h1 className="section-title" style={{ marginBottom:26 }}>Checkout</h1>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 260px", gap:22, alignItems:"start" }} className="grid-mobile-1">
           <div>
             <div className="glass-card" style={{ padding:20, marginBottom:14 }}>
-              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>📍 Delivery Address</h3>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#D5E4F5" }}>📍 Delivery Address</h3>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, marginBottom:9 }}>
                 <InputField icon="👤" placeholder="Full Name" value={address.name} onChange={e=>setAddress(a=>({...a,name:e.target.value}))} />
                 <InputField icon="📞" placeholder="Phone Number" value={address.phone} onChange={e=>setAddress(a=>({...a,phone:e.target.value}))} />
@@ -1409,17 +1603,17 @@ function CheckoutPage({ cart, onPlaceOrder, onBack }) {
               </div>
             </div>
             <div className="glass-card" style={{ padding:20 }}>
-              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>💳 Payment Method</h3>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#D5E4F5" }}>💳 Payment Method</h3>
               {[{id:"upi",label:"UPI Payment",icon:"📲",desc:"GPay, PhonePe, Paytm, BHIM"},{id:"cod",label:"Cash on Delivery",icon:"💵",desc:"Pay when order arrives"}].map(m => (
                 <div key={m.id} onClick={()=>setPayment(m.id)}
-                  style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 14px", background:payment===m.id?"rgba(0,128,238,0.07)":"#070B18", border:`1px solid ${payment===m.id?"#00C8F0":"#141928"}`, borderRadius:11, marginBottom:9, cursor:"pointer", transition:"all 0.2s" }}>
-                  <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${payment===m.id?"#00C8F0":"#3A4A60"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    {payment===m.id && <div style={{ width:9, height:9, background:"#00C8F0", borderRadius:"50%" }} />}
+                  style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 14px", background:payment===m.id?"rgba(37,99,235,0.07)":"#070B18", border:`1px solid ${payment===m.id?"#22D3EE":"#1F2937"}`, borderRadius:11, marginBottom:9, cursor:"pointer", transition:"all 0.2s" }}>
+                  <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${payment===m.id?"#22D3EE":"#3A4A60"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    {payment===m.id && <div style={{ width:9, height:9, background:"#22D3EE", borderRadius:"50%" }} />}
                   </div>
                   <span style={{ fontSize:18 }}>{m.icon}</span>
                   <div>
                     <p style={{ fontSize:13, fontWeight:600 }}>{m.label}</p>
-                    <p style={{ fontSize:11, color:"#4E5F7A" }}>{m.desc}</p>
+                    <p style={{ fontSize:11, color:"#6B7280" }}>{m.desc}</p>
                   </div>
                 </div>
               ))}
@@ -1427,14 +1621,14 @@ function CheckoutPage({ cart, onPlaceOrder, onBack }) {
             </div>
           </div>
           <div className="glass-card" style={{ padding:20 }}>
-            <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, marginBottom:16 }}>Order Summary</h3>
+            <h3 style={{ fontFamily:"'Outfit',sans-serif", fontSize:17, fontWeight:700, marginBottom:16 }}>Order Summary</h3>
             {cart.map(i => (
               <div key={i.id} style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-                <span style={{ fontSize:12, color:"#4E5F7A", maxWidth:130, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{i.name} ×{i.qty}</span>
+                <span style={{ fontSize:12, color:"#6B7280", maxWidth:130, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{i.name} ×{i.qty}</span>
                 <span style={{ fontSize:12 }}>{fp(Math.round(i.price*(1-i.discount/100))*i.qty)}</span>
               </div>
             ))}
-            <div style={{ borderTop:"1px solid #141928", paddingTop:12, marginTop:8, marginBottom:16 }}>
+            <div style={{ borderTop:"1px solid #1F2937", paddingTop:12, marginTop:8, marginBottom:16 }}>
               <div style={{ display:"flex", justifyContent:"space-between" }}>
                 <span style={{ fontWeight:600 }}>Total</span>
                 <span className="price-tag gradient-text" style={{ fontSize:19 }}>{fp(total)}</span>
@@ -1455,24 +1649,24 @@ function OrderSuccess({ order, onHome }) {
     <div className="page-enter" style={{ padding:"72px 24px", width:"100%" }}>
       <div style={{ textAlign:"center", maxWidth:560, margin:"0 auto" }}>
       <div style={{ width:90, height:90, background:"rgba(0,217,122,0.1)", border:"1px solid rgba(0,217,122,0.28)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 24px", fontSize:42, animation:"successPop 0.5s cubic-bezier(0.22,1,0.36,1)" }}>✅</div>
-      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:32, fontWeight:800, marginBottom:9 }}><span className="gradient-text">Order Placed!</span></h2>
-      <p style={{ color:"#4E5F7A", fontSize:15, marginBottom:5 }}>Thank you for shopping with Electronic Store 🎉</p>
-      <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:32 }}>Total: <span style={{ color:"#00C8F0", fontWeight:700 }}>{fp(order.total)}</span> via <span style={{ color:"#FFB300", fontWeight:700 }}>{order.payment==="upi"?"UPI":"Cash on Delivery"}</span></p>
+      <h2 style={{ fontFamily:"'Outfit',sans-serif", fontSize:32, fontWeight:800, marginBottom:9 }}><span className="gradient-text">Order Placed!</span></h2>
+      <p style={{ color:"#6B7280", fontSize:15, marginBottom:5 }}>Thank you for shopping with Electronic Store 🎉</p>
+      <p style={{ color:"#6B7280", fontSize:13, marginBottom:32 }}>Total: <span style={{ color:"#22D3EE", fontWeight:700 }}>{fp(order.total)}</span> via <span style={{ color:"#F59E0B", fontWeight:700 }}>{order.payment==="upi"?"UPI":"Cash on Delivery"}</span></p>
       <div className="glass-card" style={{ padding:22, marginBottom:32, textAlign:"left" }}>
         <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
           <div>
-            <p style={{ fontSize:11, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>Order ID</p>
-            <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, color:"#00C8F0" }}>#{String(order.id).slice(-8)}</p>
+            <p style={{ fontSize:11, color:"#6B7280", textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>Order ID</p>
+            <p style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, color:"#22D3EE" }}>#{String(order.id).slice(-8)}</p>
           </div>
           <div style={{ textAlign:"right" }}>
-            <p style={{ fontSize:11, color:"#4E5F7A", textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>Est. Delivery</p>
-            <p style={{ fontWeight:600, color:"#00D97A" }}>3–5 Business Days</p>
+            <p style={{ fontSize:11, color:"#6B7280", textTransform:"uppercase", letterSpacing:1, marginBottom:3 }}>Est. Delivery</p>
+            <p style={{ fontWeight:600, color:"#10B981" }}>3–5 Business Days</p>
           </div>
         </div>
-        <div style={{ borderTop:"1px solid #141928", paddingTop:12 }}>
-          <p style={{ fontSize:11, color:"#4E5F7A", marginBottom:5 }}>Delivering to:</p>
-          <p style={{ fontWeight:500, color:"#C8D8F0" }}>{order.address.name}</p>
-          <p style={{ color:"#4E5F7A", fontSize:12 }}>{order.address.line1}, {order.address.city}, {order.address.state} — {order.address.pin}</p>
+        <div style={{ borderTop:"1px solid #1F2937", paddingTop:12 }}>
+          <p style={{ fontSize:11, color:"#6B7280", marginBottom:5 }}>Delivering to:</p>
+          <p style={{ fontWeight:500, color:"#D5E4F5" }}>{order.address.name}</p>
+          <p style={{ color:"#6B7280", fontSize:12 }}>{order.address.line1}, {order.address.city}, {order.address.state} — {order.address.pin}</p>
         </div>
       </div>
       <button className="btn-primary" onClick={onHome} style={{ padding:"13px 34px", fontSize:15 }}>Continue Shopping →</button>
@@ -1486,8 +1680,8 @@ function ComparePage({ compareList, onRemove, onAddCart }) {
   if (compareList.length === 0) return (
     <div style={{ textAlign:"center", padding:"72px 24px" }}>
       <div style={{ fontSize:60, marginBottom:14 }}>⊞</div>
-      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:10 }}>Nothing to Compare</h2>
-      <p style={{ color:"#4E5F7A" }}>Add products using the compare button on product cards</p>
+      <h2 style={{ fontFamily:"'Outfit',sans-serif", fontSize:24, marginBottom:10 }}>Nothing to Compare</h2>
+      <p style={{ color:"#6B7280" }}>Add products using the compare button on product cards</p>
     </div>
   );
   const allKeys = [...new Set(compareList.flatMap(p => Object.keys(p.specs)))];
@@ -1498,15 +1692,15 @@ function ComparePage({ compareList, onRemove, onAddCart }) {
         <table style={{ width:"100%", borderCollapse:"collapse", minWidth:480 }}>
           <thead>
             <tr>
-              <th style={{ padding:"12px 16px", background:"#070B18", color:"#4E5F7A", fontSize:12, textAlign:"left", width:140 }}>Feature</th>
+              <th style={{ padding:"12px 16px", background:"#070B18", color:"#6B7280", fontSize:12, textAlign:"left", width:140 }}>Feature</th>
               {compareList.map(p => (
-                <th key={p.id} style={{ padding:"12px 16px", background:"#0B0F1E", border:"1px solid #141928", textAlign:"center" }}>
+                <th key={p.id} style={{ padding:"12px 16px", background:"#111827", border:"1px solid #1F2937", textAlign:"center" }}>
                   <img src={p.image} alt={p.name} style={{ width:"100%", maxWidth:120, height:82, objectFit:"contain", borderRadius:9, marginBottom:9, background:"#060A16", padding:4 }} onError={e=>{e.target.src=CAT_FALLBACK[p.category]||`https://placehold.co/200x150/0B0F1E/00C8F0?text=IMG`;}} />
-                  <p style={{ fontSize:12, fontWeight:500, marginBottom:4, color:"#C8D8F0" }}>{p.name}</p>
+                  <p style={{ fontSize:12, fontWeight:500, marginBottom:4, color:"#D5E4F5" }}>{p.name}</p>
                   <p className="price-tag gradient-text" style={{ fontSize:15, marginBottom:7 }}>{fp(Math.round(p.price*(1-p.discount/100)))}</p>
                   <div style={{ display:"flex", gap:5, justifyContent:"center" }}>
                     <button className="btn-primary" style={{ fontSize:10, padding:"6px 10px" }} onClick={()=>onAddCart(p)}>Add to Cart</button>
-                    <button onClick={()=>onRemove(p.id)} style={{ background:"#070B18", border:"1px solid #141928", color:"#4E5F7A", fontSize:10, padding:"6px 9px", borderRadius:7, cursor:"pointer" }}>Remove</button>
+                    <button onClick={()=>onRemove(p.id)} style={{ background:"#070B18", border:"1px solid #1F2937", color:"#6B7280", fontSize:10, padding:"6px 9px", borderRadius:7, cursor:"pointer" }}>Remove</button>
                   </div>
                 </th>
               ))}
@@ -1517,9 +1711,9 @@ function ComparePage({ compareList, onRemove, onAddCart }) {
               ...allKeys.map(k=>[k.charAt(0).toUpperCase()+k.slice(1), p=>p.specs[k]||"—"])
             ].map(([label,fn],ri) => (
               <tr key={label} style={{ background:ri%2===0?"#070B18":"transparent" }}>
-                <td style={{ padding:"10px 16px", color:"#4E5F7A", fontSize:12 }}>{label}</td>
+                <td style={{ padding:"10px 16px", color:"#6B7280", fontSize:12 }}>{label}</td>
                 {compareList.map(p => (
-                  <td key={p.id} style={{ padding:"10px 16px", border:"1px solid #0D1420", fontSize:12, textAlign:"center", color:"#C8D8F0" }}>{fn(p)}</td>
+                  <td key={p.id} style={{ padding:"10px 16px", border:"1px solid #0D1420", fontSize:12, textAlign:"center", color:"#D5E4F5" }}>{fn(p)}</td>
                 ))}
               </tr>
             ))}
@@ -1536,7 +1730,7 @@ function DealsPage({ products, onAddCart, onView }) {
     <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
       <div className="section-wrap">
         <h1 className="section-title" style={{ marginBottom:7 }}>⚡ Flash <span className="gradient-text">Deals</span></h1>
-        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:34 }}>Limited-time offers — prices drop at midnight!</p>
+        <p style={{ color:"#6B7280", fontSize:13, marginBottom:34 }}>Limited-time offers — prices drop at midnight!</p>
         <div className="product-grid">
           {DEALS_DATA.map(deal => {
             const savings = deal.price - deal.dealPrice;
@@ -1546,20 +1740,20 @@ function DealsPage({ products, onAddCart, onView }) {
                   <img src={deal.image} alt={deal.name} loading="lazy"
                     onError={e=>{e.target.src=CAT_FALLBACK[deal.category]||`https://placehold.co/600x600/0B0F1E/F03060?text=Deal`;}} />
                   <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,7,15,0.65) 0%, transparent 50%)", pointerEvents:"none" }} />
-                  <div style={{ position:"absolute", top:10, left:10, background:"linear-gradient(135deg,#F03060,#FF6B35)", color:"#fff", borderRadius:7, padding:"4px 10px", fontSize:11, fontWeight:800 }}>-{deal.discount+5}% OFF</div>
+                  <div style={{ position:"absolute", top:10, left:10, background:"linear-gradient(135deg,#EF4444,#FF6B35)", color:"#fff", borderRadius:7, padding:"4px 10px", fontSize:11, fontWeight:800 }}>-{deal.discount+5}% OFF</div>
                   <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"5px 12px" }}>
-                    <p style={{ fontSize:10, fontWeight:700, color:"#F03060", textTransform:"uppercase", letterSpacing:1.2 }}>{deal.brand}</p>
+                    <p style={{ fontSize:10, fontWeight:700, color:"#EF4444", textTransform:"uppercase", letterSpacing:1.2 }}>{deal.brand}</p>
                   </div>
                 </div>
                 <div className="card-body">
-                  <p style={{ fontSize:13, fontWeight:600, color:"#C8D8F0", marginBottom:7, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{deal.name}</p>
+                  <p style={{ fontSize:13, fontWeight:600, color:"#D5E4F5", marginBottom:7, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{deal.name}</p>
                   <div style={{ display:"flex", alignItems:"baseline", gap:9, marginBottom:7 }}>
-                    <span className="price-tag" style={{ fontSize:22, color:"#F03060" }}>{fp(deal.dealPrice)}</span>
+                    <span className="price-tag" style={{ fontSize:22, color:"#EF4444" }}>{fp(deal.dealPrice)}</span>
                     <span style={{ fontSize:11, color:"#2E4060", textDecoration:"line-through" }}>{fp(deal.price)}</span>
                   </div>
-                  <p style={{ fontSize:11, color:"#00D97A", marginBottom:10 }}>You save {fp(savings)}!</p>
+                  <p style={{ fontSize:11, color:"#10B981", marginBottom:10 }}>You save {fp(savings)}!</p>
                   <div style={{ marginTop:"auto" }}>
-                    <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:6 }}>Offer ends in:</p>
+                    <p style={{ fontSize:10, color:"#6B7280", marginBottom:6 }}>Offer ends in:</p>
                     <CountdownTimer endTime={deal.endTime} />
                   </div>
                   <button className="btn-primary" style={{ width:"100%", padding:10, marginTop:12, fontSize:13 }} onClick={e=>{e.stopPropagation();onAddCart(deal);}}>Add to Cart</button>
@@ -1585,11 +1779,11 @@ function BrandsPage({ products, onCategoryClick }) {
     <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
       <div className="section-wrap">
         <h1 className="section-title" style={{ marginBottom:7 }}>Our <span className="gradient-text">Brands</span></h1>
-        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:22 }}>Authorized dealer for world's best electronics brands</p>
+        <p style={{ color:"#6B7280", fontSize:13, marginBottom:22 }}>Authorized dealer for world's best electronics brands</p>
         <div style={{ display:"flex", gap:8, marginBottom:26, flexWrap:"wrap" }}>
           {countries.map(c => (
             <button key={c} onClick={()=>{ setFilter(c); setSelectedBrand(null); }}
-              style={{ padding:"6px 15px", background:filter===c?"linear-gradient(135deg,#0080EE,#6457FF)":"#0B0F1E", border:`1px solid ${filter===c?"transparent":"#141928"}`, color:filter===c?"#fff":"#6A7E9C", borderRadius:8, fontSize:12, fontWeight:500, cursor:"pointer", transition:"all 0.2s", boxShadow:filter===c?"0 3px 12px rgba(0,128,238,0.28)":"none" }}>
+              style={{ padding:"6px 15px", background:filter===c?"linear-gradient(135deg,#2563EB,#8B5CF6)":"#111827", border:`1px solid ${filter===c?"transparent":"#1F2937"}`, color:filter===c?"#fff":"#6A7E9C", borderRadius:8, fontSize:12, fontWeight:500, cursor:"pointer", transition:"all 0.2s", boxShadow:filter===c?"0 3px 12px rgba(37,99,235,0.28)":"none" }}>
               {c}
             </button>
           ))}
@@ -1600,12 +1794,12 @@ function BrandsPage({ products, onCategoryClick }) {
             const isSel = selectedBrand === brand.name;
             return (
               <div key={brand.id} className="brand-card" onClick={() => setSelectedBrand(isSel?null:brand.name)}
-                style={{ border:`1px solid ${isSel?brand.color:"#141928"}`, background:isSel?`${brand.color}0D`:"#0B0F1E" }}>
-                <div style={{ width:50, height:50, background:`${brand.color}18`, border:`1px solid ${brand.color}30`, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:14, color:brand.color }}>{brand.logo}</div>
-                <p style={{ fontWeight:700, fontSize:13, marginBottom:3, color:"#C8D8F0" }}>{brand.name}</p>
-                <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:6 }}>{brand.country}</p>
+                style={{ border:`1px solid ${isSel?brand.color:"#1F2937"}`, background:isSel?`${brand.color}0D`:"#111827" }}>
+                <div style={{ width:50, height:50, background:`${brand.color}18`, border:`1px solid ${brand.color}30`, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 10px", fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:14, color:brand.color }}>{brand.logo}</div>
+                <p style={{ fontWeight:700, fontSize:13, marginBottom:3, color:"#D5E4F5" }}>{brand.name}</p>
+                <p style={{ fontSize:10, color:"#6B7280", marginBottom:6 }}>{brand.country}</p>
                 {count > 0 && <span className="badge badge-blue" style={{ fontSize:9 }}>{count} products</span>}
-                {isSel && <p style={{ fontSize:10, color:"#00C8F0", marginTop:7, fontWeight:600 }}>▲ Viewing</p>}
+                {isSel && <p style={{ fontSize:10, color:"#22D3EE", marginTop:7, fontWeight:600 }}>▲ Viewing</p>}
               </div>
             );
           })}
@@ -1626,14 +1820,14 @@ function BrandsPage({ products, onCategoryClick }) {
                     <span className="badge badge-purple" style={{ position:"absolute", top:10, left:10 }}>-{p.discount}%</span>
                   </div>
                   <div className="card-body">
-                    <p style={{ fontSize:10, fontWeight:700, color:"#00C8F0", textTransform:"uppercase", letterSpacing:1, marginBottom:5 }}>{p.brand}</p>
-                    <p style={{ fontSize:13, fontWeight:600, color:"#C8D8F0", marginBottom:5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{p.name}</p>
+                    <p style={{ fontSize:10, fontWeight:700, color:"#22D3EE", textTransform:"uppercase", letterSpacing:1, marginBottom:5 }}>{p.brand}</p>
+                    <p style={{ fontSize:13, fontWeight:600, color:"#D5E4F5", marginBottom:5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{p.name}</p>
                     <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
                       <Stars rating={p.rating} size={11} />
-                      <span style={{ fontSize:10, color:"#4E5F7A" }}>{p.rating}</span>
+                      <span style={{ fontSize:10, color:"#6B7280" }}>{p.rating}</span>
                     </div>
                     <div style={{ display:"flex", alignItems:"baseline", gap:7 }}>
-                      <span className="price-tag" style={{ fontSize:16, color:"#00C8F0" }}>{fp(Math.round(p.price*(1-p.discount/100)))}</span>
+                      <span className="price-tag" style={{ fontSize:16, color:"#22D3EE" }}>{fp(Math.round(p.price*(1-p.discount/100)))}</span>
                       <span style={{ fontSize:10, color:"#2E4060", textDecoration:"line-through" }}>{fp(p.price)}</span>
                     </div>
                     <span className={`badge ${p.stock>5?"badge-green":"badge-red"}`} style={{ marginTop:8, display:"inline-block" }}>{p.stock>5?"In Stock":`${p.stock} left`}</span>
@@ -1644,7 +1838,7 @@ function BrandsPage({ products, onCategoryClick }) {
           </div>
         )}
         {selectedBrand && brandProducts.length === 0 && (
-          <div style={{ textAlign:"center", padding:"36px", color:"#4E5F7A" }}>No products found for {selectedBrand}.</div>
+          <div style={{ textAlign:"center", padding:"36px", color:"#6B7280" }}>No products found for {selectedBrand}.</div>
         )}
       </div>
     </div>
@@ -1658,14 +1852,14 @@ function HelpPage() {
     <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
       <div className="section-wrap">
         <h1 className="section-title" style={{ marginBottom:7 }}>Help & <span className="gradient-text">FAQ</span></h1>
-        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:32 }}>Find answers to commonly asked questions</p>
+        <p style={{ color:"#6B7280", fontSize:13, marginBottom:32 }}>Find answers to commonly asked questions</p>
         <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
           {FAQ_DATA.map((faq,i) => (
-            <div key={i} className="faq-item" style={{ background:openIdx===i?"rgba(0,128,238,0.04)":"transparent", borderRadius:openIdx===i?11:0 }}>
+            <div key={i} className="faq-item" style={{ background:openIdx===i?"rgba(37,99,235,0.04)":"transparent", borderRadius:openIdx===i?11:0 }}>
               <button onClick={() => setOpenIdx(openIdx===i?null:i)}
-                style={{ width:"100%", background:"none", border:"none", padding:"16px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer", color:openIdx===i?"#00C8F0":"#C8D8F0", textAlign:"left", gap:14 }}>
+                style={{ width:"100%", background:"none", border:"none", padding:"16px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer", color:openIdx===i?"#22D3EE":"#D5E4F5", textAlign:"left", gap:14 }}>
                 <span style={{ fontSize:14, fontWeight:600, flex:1 }}>{faq.q}</span>
-                <span style={{ fontSize:18, color:openIdx===i?"#0080EE":"#4E5F7A", transition:"transform 0.28s", transform:openIdx===i?"rotate(180deg)":"rotate(0deg)", flexShrink:0 }}>⌄</span>
+                <span style={{ fontSize:18, color:openIdx===i?"#2563EB":"#6B7280", transition:"transform 0.28s", transform:openIdx===i?"rotate(180deg)":"rotate(0deg)", flexShrink:0 }}>⌄</span>
               </button>
               <div style={{ maxHeight:openIdx===i?"400px":0, opacity:openIdx===i?1:0, overflow:"hidden", transition:"max-height 0.35s ease, opacity 0.28s ease" }}>
                 <p style={{ padding:"0 18px 16px", fontSize:13, color:"#5A6A80", lineHeight:1.75 }}>{faq.a}</p>
@@ -1674,11 +1868,11 @@ function HelpPage() {
           ))}
         </div>
         <div className="glass-card" style={{ padding:26, marginTop:36, textAlign:"center" }}>
-          <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:19, fontWeight:700, marginBottom:9 }}>Still need help?</h3>
-          <p style={{ color:"#4E5F7A", marginBottom:18, fontSize:13 }}>Our support team is available Mon–Sat, 9AM–7PM</p>
+          <h3 style={{ fontFamily:"'Outfit',sans-serif", fontSize:19, fontWeight:700, marginBottom:9 }}>Still need help?</h3>
+          <p style={{ color:"#6B7280", marginBottom:18, fontSize:13 }}>Our support team is available Mon–Sat, 9AM–7PM</p>
           <div style={{ display:"flex", gap:12, justifyContent:"center", flexWrap:"wrap" }}>
-            <a href="tel:11112345555" style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.22)", borderRadius:9, color:"#00C8F0", fontSize:13, fontWeight:500 }}>📞 111 1234 5555</a>
-            <a href="mailto:electronicstore@gmail.com" style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.22)", borderRadius:9, color:"#00C8F0", fontSize:13, fontWeight:500 }}>✉️ Email Us</a>
+            <a href="tel:11112345555" style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", background:"rgba(37,99,235,0.09)", border:"1px solid rgba(37,99,235,0.22)", borderRadius:9, color:"#22D3EE", fontSize:13, fontWeight:500 }}>📞 111 1234 5555</a>
+            <a href="mailto:electronicstore@gmail.com" style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", background:"rgba(37,99,235,0.09)", border:"1px solid rgba(37,99,235,0.22)", borderRadius:9, color:"#22D3EE", fontSize:13, fontWeight:500 }}>✉️ Email Us</a>
           </div>
         </div>
       </div>
@@ -1700,11 +1894,11 @@ function ContactPage() {
     <div className="page-enter" style={{ width:"100%", padding:"36px 0" }}>
       <div className="section-wrap">
         <h1 className="section-title" style={{ marginBottom:7 }}>Get in <span className="gradient-text">Touch</span></h1>
-        <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:32 }}>We'd love to hear from you. Send us a message!</p>
+        <p style={{ color:"#6B7280", fontSize:13, marginBottom:32 }}>We'd love to hear from you. Send us a message!</p>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }} className="grid-mobile-1">
           <div>
             <div className="glass-card" style={{ padding:26, marginBottom:18 }}>
-              <h3 style={{ fontSize:15, fontWeight:700, marginBottom:20, color:"#C8D8F0" }}>Send a Message</h3>
+              <h3 style={{ fontSize:15, fontWeight:700, marginBottom:20, color:"#D5E4F5" }}>Send a Message</h3>
               <InputField icon="👤" placeholder="Your Name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} style={{ marginBottom:10 }} />
               <InputField icon="✉️" type="email" placeholder="Email Address" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} style={{ marginBottom:10 }} />
               <div style={{ position:"relative", marginBottom:14 }}>
@@ -1712,18 +1906,18 @@ function ContactPage() {
                 <textarea className="input-premium" placeholder="Your message…" rows={4} value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))} style={{ resize:"vertical", paddingTop:10 }} />
               </div>
               {sent ? (
-                <div style={{ padding:"12px 16px", background:"rgba(0,217,122,0.08)", border:"1px solid rgba(0,217,122,0.22)", borderRadius:9, color:"#00D97A", fontSize:13, fontWeight:600 }}>✓ Message sent! We'll reply within 24 hours.</div>
+                <div style={{ padding:"12px 16px", background:"rgba(0,217,122,0.08)", border:"1px solid rgba(0,217,122,0.22)", borderRadius:9, color:"#10B981", fontSize:13, fontWeight:600 }}>✓ Message sent! We'll reply within 24 hours.</div>
               ) : (
                 <button className="btn-primary" style={{ width:"100%", padding:12, fontSize:14 }} onClick={handle}>Send Message →</button>
               )}
             </div>
             <div className="glass-card" style={{ padding:20 }}>
-              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>Store Information</h3>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:16, color:"#D5E4F5" }}>Store Information</h3>
               {[["📍","Address","Electronic Store, Sirsi, Uttara Kannada, Karnataka, 581355"],["📞","Phone","111 1234 5555"],["📧","Email","electronicstore@gmail.com"],["🕐","Hours","Mon–Sat: 9:00 AM – 7:00 PM"]].map(([ic,label,val]) => (
                 <div key={label} style={{ display:"flex", gap:10, marginBottom:12, alignItems:"flex-start" }}>
-                  <div style={{ width:34, height:34, background:"rgba(0,128,238,0.09)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, flexShrink:0 }}>{ic}</div>
+                  <div style={{ width:34, height:34, background:"rgba(37,99,235,0.09)", border:"1px solid rgba(37,99,235,0.18)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, flexShrink:0 }}>{ic}</div>
                   <div>
-                    <p style={{ fontSize:10, color:"#4E5F7A", marginBottom:1, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8 }}>{label}</p>
+                    <p style={{ fontSize:10, color:"#6B7280", marginBottom:1, fontWeight:600, textTransform:"uppercase", letterSpacing:0.8 }}>{label}</p>
                     <p style={{ fontSize:12, color:"#B0C4DE" }}>{val}</p>
                   </div>
                 </div>
@@ -1734,20 +1928,37 @@ function ContactPage() {
             <div className="glass-card" style={{ overflow:"hidden", flex:1 }}>
               <div style={{ background:"linear-gradient(135deg,#050D1A,#091525)", padding:"13px 16px", display:"flex", alignItems:"center", gap:9 }}>
                 <span style={{ fontSize:15 }}>🗺️</span>
-                <span style={{ fontSize:12, fontWeight:700, color:"#C8D8F0" }}>Store Location — Sirsi, Karnataka</span>
+                <span style={{ fontSize:12, fontWeight:700, color:"#D5E4F5" }}>Store Location — Sirsi, Karnataka</span>
               </div>
               <iframe src="https://maps.google.com/maps?q=Sirsi,Karnataka,India&t=&z=13&ie=UTF8&iwloc=&output=embed"
                 width="100%" height="300" style={{ border:0, display:"block" }}
                 allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Store Location" />
               <div style={{ padding:"12px 16px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <p style={{ fontSize:12, color:"#4E5F7A" }}>Sirsi, Uttara Kannada, Karnataka</p>
-                <a href="https://maps.google.com/?q=Sirsi,Karnataka" target="_blank" rel="noreferrer" style={{ fontSize:11, color:"#00C8F0", fontWeight:600 }}>Open Maps →</a>
+                <p style={{ fontSize:12, color:"#6B7280" }}>Sirsi, Uttara Kannada, Karnataka</p>
+                <a href="https://maps.google.com/?q=Sirsi,Karnataka" target="_blank" rel="noreferrer" style={{ fontSize:11, color:"#22D3EE", fontWeight:600 }}>Open Maps →</a>
               </div>
             </div>
             <div className="glass-card" style={{ padding:20 }}>
-              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:14, color:"#C8D8F0" }}>Quick Feedback</h3>
+              <h3 style={{ fontSize:14, fontWeight:700, marginBottom:14, color:"#D5E4F5" }}>Quick Feedback</h3>
               <textarea className="input-premium" rows={3} placeholder="Share your feedback…" style={{ marginBottom:10, paddingLeft:13 }} />
               <button className="btn-primary" style={{ width:"100%", padding:10 }}>Submit Feedback</button>
+            </div>
+
+            {/* ── WHATSAPP CONTACT ── */}
+            <div className="glass-card" style={{ padding:22, border:"1px solid rgba(37,211,102,0.18)", background:"rgba(37,211,102,0.03)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <div style={{ width:40, height:40, background:"rgba(37,211,102,0.12)", border:"1px solid rgba(37,211,102,0.25)", borderRadius:11, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <svg viewBox="0 0 32 32" width="22" height="22" fill="#25D366"><path d="M16 2.9A13.1 13.1 0 0 0 2.9 16c0 2.3.6 4.5 1.8 6.5L2.9 29.1l6.8-1.8A13.1 13.1 0 1 0 16 2.9zm0 24A10.9 10.9 0 0 1 9.2 24l-.4-.3-4 1 1-3.9-.3-.4A10.9 10.9 0 1 1 16 26.9zm6-8.1c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.6-2.1-.2-.3 0-.5.1-.6l.6-.7c.2-.2.2-.3.3-.5 0-.2 0-.4-.1-.6-.1-.2-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3 4.8 4.2 2.8 1.1 2.8.7 3.3.7.5 0 1.7-.7 2-1.3.2-.6.2-1.2.1-1.3z"/></svg>
+                </div>
+                <div>
+                  <p style={{ fontSize:14, fontWeight:700, color:"#D5E4F5", marginBottom:2 }}>Chat on WhatsApp</p>
+                  <p style={{ fontSize:12, color:"#6B7280" }}>Instant support — typically replies in minutes</p>
+                </div>
+              </div>
+              <a href="https://wa.me/919480592784" target="_blank" rel="noreferrer" className="btn-whatsapp" style={{ width:"100%", justifyContent:"center", marginTop:4, borderRadius:10, fontSize:14, fontWeight:700, padding:"11px 20px" }}>
+                <svg viewBox="0 0 32 32"><path d="M16 2.9A13.1 13.1 0 0 0 2.9 16c0 2.3.6 4.5 1.8 6.5L2.9 29.1l6.8-1.8A13.1 13.1 0 1 0 16 2.9zm0 24A10.9 10.9 0 0 1 9.2 24l-.4-.3-4 1 1-3.9-.3-.4A10.9 10.9 0 1 1 16 26.9zm6-8.1c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.6-2.1-.2-.3 0-.5.1-.6l.6-.7c.2-.2.2-.3.3-.5 0-.2 0-.4-.1-.6-.1-.2-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 2 3 4.8 4.2 2.8 1.1 2.8.7 3.3.7.5 0 1.7-.7 2-1.3.2-.6.2-1.2.1-1.3z"/></svg>
+                WhatsApp Us: +91 9480592784
+              </a>
             </div>
           </div>
         </div>
@@ -1761,8 +1972,8 @@ function WishlistPage({ wishlist, onRemove, onAddCart, onView }) {
   if (wishlist.length === 0) return (
     <div style={{ textAlign:"center", padding:"72px 24px" }}>
       <div style={{ fontSize:58, marginBottom:14 }}>🤍</div>
-      <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:24, marginBottom:10 }}>Wishlist is Empty</h2>
-      <p style={{ color:"#4E5F7A" }}>Save your favourite products here!</p>
+      <h2 style={{ fontFamily:"'Outfit',sans-serif", fontSize:24, marginBottom:10 }}>Wishlist is Empty</h2>
+      <p style={{ color:"#6B7280" }}>Save your favourite products here!</p>
     </div>
   );
   return (
@@ -1806,26 +2017,26 @@ function ProfilePage({ user, onSave, orders }) {
         <h1 className="section-title" style={{ marginBottom:26 }}>My <span className="gradient-text">Profile</span></h1>
         <div className="glass-card" style={{ padding:22, marginBottom:24 }}>
           <div style={{ display:"flex", alignItems:"center", gap:18, marginBottom:20 }}>
-            <div style={{ width:68, height:68, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, fontWeight:800, flexShrink:0 }}>
+            <div style={{ width:68, height:68, background:"linear-gradient(135deg,#2563EB,#8B5CF6)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, fontWeight:800, flexShrink:0 }}>
               {form.fullName ? form.fullName[0].toUpperCase() : "?"}
             </div>
             <div>
-              <h2 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, color:"#E2ECFF" }}>{form.fullName||"Your Name"}</h2>
-              <p style={{ color:"#4E5F7A", fontSize:13, marginTop:2 }}>📞 {form.mobile||"Add mobile number"}</p>
+              <h2 style={{ fontFamily:"'Outfit',sans-serif", fontSize:20, fontWeight:800, color:"#F0F4FF" }}>{form.fullName||"Your Name"}</h2>
+              <p style={{ color:"#6B7280", fontSize:13, marginTop:2 }}>📞 {form.mobile||"Add mobile number"}</p>
             </div>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
             {[["📦",orders.length,"Orders"],["❤️","—","Wishlist"],["⭐","4.8","Rating"]].map(([ic,val,label]) => (
               <div key={label} style={{ background:"#070B18", borderRadius:11, padding:"12px 14px", textAlign:"center" }}>
                 <span style={{ fontSize:18 }}>{ic}</span>
-                <p className="price-tag" style={{ fontSize:20, marginTop:5, color:"#00C8F0" }}>{val}</p>
-                <p style={{ fontSize:11, color:"#4E5F7A" }}>{label}</p>
+                <p className="price-tag" style={{ fontSize:20, marginTop:5, color:"#22D3EE" }}>{val}</p>
+                <p style={{ fontSize:11, color:"#6B7280" }}>{label}</p>
               </div>
             ))}
           </div>
         </div>
         <div className="glass-card" style={{ padding:26, marginBottom:22 }}>
-          <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, marginBottom:22, color:"#C8D8F0" }}>Profile Details</h3>
+          <h3 style={{ fontFamily:"'Outfit',sans-serif", fontSize:17, fontWeight:700, marginBottom:22, color:"#D5E4F5" }}>Profile Details</h3>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
             {fields.map(f => (
               <InputField key={f.key} icon={f.icon} type={f.type} placeholder={f.label}
@@ -1835,7 +2046,7 @@ function ProfilePage({ user, onSave, orders }) {
           </div>
           <div style={{ marginTop:20 }}>
             {saved ? (
-              <div style={{ padding:"12px 16px", background:"rgba(0,217,122,0.08)", border:"1px solid rgba(0,217,122,0.22)", borderRadius:9, color:"#00D97A", fontSize:13, fontWeight:600 }}>✓ Profile saved successfully!</div>
+              <div style={{ padding:"12px 16px", background:"rgba(0,217,122,0.08)", border:"1px solid rgba(0,217,122,0.22)", borderRadius:9, color:"#10B981", fontSize:13, fontWeight:600 }}>✓ Profile saved successfully!</div>
             ) : (
               <button className="btn-primary" style={{ padding:"12px 26px", fontSize:14, minWidth:180 }} onClick={() => setShowConfirm(true)}>💾 Save Profile</button>
             )}
@@ -1843,17 +2054,17 @@ function ProfilePage({ user, onSave, orders }) {
         </div>
         {orders.length > 0 && (
           <div>
-            <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:19, fontWeight:700, marginBottom:16, color:"#C8D8F0" }}>Recent Orders</h3>
+            <h3 style={{ fontFamily:"'Outfit',sans-serif", fontSize:19, fontWeight:700, marginBottom:16, color:"#D5E4F5" }}>Recent Orders</h3>
             {orders.map((o,i) => (
               <div key={i} className="glass-card" style={{ padding:16, marginBottom:9 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
-                  <span style={{ fontSize:12, color:"#4E5F7A" }}>Order #{String(i+1).padStart(4,"0")}</span>
+                  <span style={{ fontSize:12, color:"#6B7280" }}>Order #{String(i+1).padStart(4,"0")}</span>
                   <span className="badge badge-green">✓ Placed</span>
                 </div>
-                <p style={{ fontSize:13, fontWeight:500, marginBottom:4, color:"#C8D8F0" }}>{o.items?.length||0} item(s)</p>
+                <p style={{ fontSize:13, fontWeight:500, marginBottom:4, color:"#D5E4F5" }}>{o.items?.length||0} item(s)</p>
                 <div style={{ display:"flex", justifyContent:"space-between" }}>
-                  <span style={{ fontSize:12, color:"#4E5F7A" }}>{o.payment==="upi"?"UPI":"Cash on Delivery"}</span>
-                  <span className="price-tag" style={{ fontSize:15, color:"#00C8F0" }}>{fp(o.total)}</span>
+                  <span style={{ fontSize:12, color:"#6B7280" }}>{o.payment==="upi"?"UPI":"Cash on Delivery"}</span>
+                  <span className="price-tag" style={{ fontSize:15, color:"#22D3EE" }}>{fp(o.total)}</span>
                 </div>
               </div>
             ))}
@@ -1861,10 +2072,10 @@ function ProfilePage({ user, onSave, orders }) {
         )}
         {showConfirm && (
           <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:5000, display:"flex", alignItems:"center", justifyContent:"center", animation:"fadeIn 0.2s ease" }} onClick={() => setShowConfirm(false)}>
-            <div onClick={e=>e.stopPropagation()} className="glass-card" style={{ padding:30, maxWidth:360, width:"calc(100% - 32px)", textAlign:"center", animation:"successPop 0.28s ease", border:"1px solid rgba(0,200,240,0.22)" }}>
+            <div onClick={e=>e.stopPropagation()} className="glass-card" style={{ padding:30, maxWidth:360, width:"calc(100% - 32px)", textAlign:"center", animation:"successPop 0.28s ease", border:"1px solid rgba(37,99,235,0.22)" }}>
               <div style={{ fontSize:40, marginBottom:12 }}>💾</div>
-              <h3 style={{ fontFamily:"'Syne',sans-serif", fontSize:20, fontWeight:800, marginBottom:9 }}>Save Profile?</h3>
-              <p style={{ color:"#4E5F7A", fontSize:13, marginBottom:22, lineHeight:1.6 }}>Confirm updating your profile details. This will be used for future orders.</p>
+              <h3 style={{ fontFamily:"'Outfit',sans-serif", fontSize:20, fontWeight:800, marginBottom:9 }}>Save Profile?</h3>
+              <p style={{ color:"#6B7280", fontSize:13, marginBottom:22, lineHeight:1.6 }}>Confirm updating your profile details. This will be used for future orders.</p>
               <div style={{ display:"flex", gap:10, justifyContent:"center" }}>
                 <button className="btn-primary" style={{ padding:"10px 26px" }} onClick={confirmSave}>✓ Confirm</button>
                 <button className="btn-secondary" style={{ padding:"10px 22px" }} onClick={() => setShowConfirm(false)}>Cancel</button>
@@ -1966,28 +2177,22 @@ export default function App() {
     <>
       <style>{css}</style>
 
-      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onNavigate={navigate} />}
-
       {/* ── NAVBAR ── */}
-      <nav style={{ position:"sticky", top:0, zIndex:1000, background:"rgba(5,7,15,0.92)", backdropFilter:"blur(22px)", borderBottom:"1px solid rgba(255,255,255,0.06)", width:"100%" }}>
+      <nav style={{ position:"sticky", top:0, zIndex:1000, background:"rgba(5,7,15,0.94)", backdropFilter:"blur(24px)", borderBottom:"1px solid rgba(37,99,235,0.12)", width:"100%", boxShadow:"0 1px 30px rgba(0,0,0,0.4)" }}>
         <div style={{ width:"100%", padding:"0 clamp(14px,2.5vw,40px)", display:"flex", alignItems:"center", justifyContent:"space-between", height:64 }}>
           {/* LEFT — Logo */}
-          <div onClick={() => navigate("home")} style={{ cursor:"pointer", display:"flex", alignItems:"center", gap:9, minWidth:"fit-content", marginRight:20, flexShrink:0 }}>
-            <div style={{ width:36, height:36, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, boxShadow:"0 3px 14px rgba(0,128,238,0.4)", animation:"glowPulse 3s ease-in-out infinite" }}>⚡</div>
-            <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:20, letterSpacing:-0.4 }}><span className="gradient-text">Electronic</span> <span style={{ color:"#E2ECFF" }}>Store</span></span>
+          <div onClick={() => navigate("home")} style={{ cursor:"pointer", display:"flex", alignItems:"center", gap:10, minWidth:"fit-content", marginRight:20, flexShrink:0 }}>
+            <div style={{ width:38, height:38, background:"linear-gradient(135deg,#2563EB,#2563EB)", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 3px 14px rgba(37,99,235,0.45)", animation:"glowPulse 3s ease-in-out infinite", flexShrink:0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff" stroke="#fff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <div style={{ lineHeight:1 }}>
+              <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:18, letterSpacing:-0.5 }}><span className="gradient-text">Electronic</span><span style={{ color:"#F0F4FF" }}> Store</span></span>
+              <p style={{ fontSize:9, color:"#6B7280", fontWeight:600, letterSpacing:1.5, textTransform:"uppercase", marginTop:1 }}>Karnataka's Best</p>
+            </div>
           </div>
 
-          {/* CENTER — Search bar (desktop) */}
-          <div className="hide-mobile" style={{ flex:1, maxWidth:500, margin:"0 40px" }}>
-            <button onClick={() => setSearchOpen(true)}
-              style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.09)", borderRadius:10, padding:"10px 15px", display:"flex", alignItems:"center", gap:9, cursor:"pointer", transition:"all 0.25s", textAlign:"left" }}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(0,200,240,0.35)"; e.currentTarget.style.boxShadow="0 0 8px rgba(0,245,196,0.15)"; e.currentTarget.style.background="rgba(0,200,240,0.04)";}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)"; e.currentTarget.style.boxShadow="none"; e.currentTarget.style.background="rgba(255,255,255,0.04)";}}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4E5F7A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <span style={{ fontSize:13, color:"#2E3E58", flex:1 }}>Search products, brands…</span>
-              <span style={{ fontSize:10, color:"#2A3A50", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:5, padding:"2px 6px", flexShrink:0 }}>⌘K</span>
-            </button>
-          </div>
+          {/* CENTER — Inline Search Bar (desktop) */}
+          <NavSearchBar onNavigate={navigate} />
 
           {/* RIGHT — Nav links + Icons */}
           <div style={{ display:"flex", alignItems:"center", gap:0, flexShrink:0 }}>
@@ -2013,48 +2218,55 @@ export default function App() {
             {/* Icons */}
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
               {/* Mobile search */}
-              <button className="hide-desktop" onClick={() => setSearchOpen(true)}
-                style={{ background:"none", border:"none", color:"#4E5F7A", fontSize:19, cursor:"pointer", padding:"4px 5px", transition:"color 0.2s" }}
-                onMouseEnter={e=>e.currentTarget.style.color="#00C8F0"} onMouseLeave={e=>e.currentTarget.style.color="#4E5F7A"}>
+              <button className="hide-desktop" onClick={() => setSearchOpen(!searchOpen)}
+                style={{ background:searchOpen?"rgba(37,99,235,0.12)":"none", border:searchOpen?"1px solid rgba(37,99,235,0.3)":"none", color:searchOpen?"#22D3EE":"#6B7280", fontSize:19, cursor:"pointer", padding:"6px 7px", transition:"all 0.2s", borderRadius:8 }}
+                onMouseEnter={e=>e.currentTarget.style.color="#22D3EE"} onMouseLeave={e=>{ if(!searchOpen) e.currentTarget.style.color="#6B7280"; }}>
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </button>
               <button onClick={() => navigate("wishlist")}
-                style={{ background:"none", border:"none", color:page==="wishlist"?"#F03060":"#4E5F7A", fontSize:19, cursor:"pointer", transition:"all 0.2s", padding:"4px 5px" }}
+                style={{ background:"none", border:"none", color:page==="wishlist"?"#EF4444":"#6B7280", fontSize:19, cursor:"pointer", transition:"all 0.2s", padding:"4px 5px" }}
                 onMouseEnter={e=>e.currentTarget.style.transform="scale(1.15)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>🤍</button>
               <button onClick={() => navigate("compare")}
-                style={{ background:"none", border:"none", color:page==="compare"?"#FFB300":"#4E5F7A", fontSize:19, cursor:"pointer", position:"relative", padding:"4px 5px", transition:"color 0.2s" }}>
-                ⊞{compareList.length>0 && <span style={{ position:"absolute", top:-2, right:-2, background:"#FFB300", color:"#000", borderRadius:"50%", width:14, height:14, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{compareList.length}</span>}
+                style={{ background:"none", border:"none", color:page==="compare"?"#F59E0B":"#6B7280", fontSize:19, cursor:"pointer", position:"relative", padding:"4px 5px", transition:"color 0.2s" }}>
+                ⊞{compareList.length>0 && <span style={{ position:"absolute", top:-2, right:-2, background:"#F59E0B", color:"#000", borderRadius:"50%", width:14, height:14, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{compareList.length}</span>}
               </button>
               <button onClick={() => navigate("cart")}
-                style={{ background:"none", border:"none", color:page==="cart"?"#00C8F0":"#4E5F7A", fontSize:19, cursor:"pointer", position:"relative", padding:"4px 5px", transition:"color 0.2s" }}>
-                🛒{cartCount>0 && <span style={{ position:"absolute", top:-2, right:-2, background:"linear-gradient(135deg,#0080EE,#6457FF)", color:"#fff", borderRadius:"50%", width:14, height:14, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{cartCount}</span>}
+                style={{ background:"none", border:"none", color:page==="cart"?"#22D3EE":"#6B7280", fontSize:19, cursor:"pointer", position:"relative", padding:"4px 5px", transition:"color 0.2s" }}>
+                🛒{cartCount>0 && <span style={{ position:"absolute", top:-2, right:-2, background:"linear-gradient(135deg,#2563EB,#8B5CF6)", color:"#fff", borderRadius:"50%", width:14, height:14, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center" }}>{cartCount}</span>}
               </button>
               <button onClick={() => navigate("profile")}
-                style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(0,128,238,0.07)", border:"1px solid rgba(0,200,240,0.18)", borderRadius:9, padding:"5px 12px", cursor:"pointer", transition:"all 0.2s" }}
-                onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.15)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.38)"; e.currentTarget.style.transform="scale(1.04)";}}
-                onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.07)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.18)"; e.currentTarget.style.transform="scale(1)";}}>
-                <div style={{ width:24, height:24, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800 }}>{user?.name?user.name[0].toUpperCase():"👤"}</div>
-                <span className="hide-mobile" style={{ fontSize:12, fontWeight:500, color:"#8A9BBD" }}>{user?.name?user.name.split(" ")[0]:"Profile"}</span>
+                style={{ display:"flex", alignItems:"center", gap:6, background:"rgba(37,99,235,0.07)", border:"1px solid rgba(37,99,235,0.18)", borderRadius:9, padding:"5px 12px", cursor:"pointer", transition:"all 0.2s" }}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(37,99,235,0.15)"; e.currentTarget.style.borderColor="rgba(37,99,235,0.38)"; e.currentTarget.style.transform="scale(1.04)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(37,99,235,0.07)"; e.currentTarget.style.borderColor="rgba(37,99,235,0.18)"; e.currentTarget.style.transform="scale(1)";}}>
+                <div style={{ width:24, height:24, background:"linear-gradient(135deg,#2563EB,#8B5CF6)", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800 }}>{user?.name?user.name[0].toUpperCase():"👤"}</div>
+                <span className="hide-mobile" style={{ fontSize:12, fontWeight:500, color:"#9CA3AF" }}>{user?.name?user.name.split(" ")[0]:"Profile"}</span>
               </button>
               <button className="hide-desktop" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, color:"#8A9BBD", fontSize:18, cursor:"pointer", padding:"6px 9px", marginLeft:4 }}>☰</button>
+                style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, color:"#9CA3AF", fontSize:18, cursor:"pointer", padding:"6px 9px", marginLeft:4 }}>☰</button>
             </div>
           </div>
         </div>
 
+        {/* Mobile search row */}
+        {searchOpen && (
+          <div className="hide-desktop" style={{ background:"rgba(11,15,25,0.98)", borderTop:"1px solid rgba(37,99,235,0.1)", padding:"10px 14px", animation:"slideDown 0.2s ease" }}>
+            <MobileSearchBar onNavigate={navigate} onClose={() => setSearchOpen(false)} />
+          </div>
+        )}
+
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div style={{ background:"#060912", borderTop:"1px solid rgba(0,128,238,0.1)", padding:"10px 14px 14px", animation:"slideDown 0.2s ease" }}>
+          <div style={{ background:"#090E1C", borderTop:"1px solid rgba(37,99,235,0.1)", padding:"10px 14px 14px", animation:"slideDown 0.2s ease" }}>
             {NAV_LINKS.filter(([p])=>p!=="categories").map(([p,l]) => (
               <div key={p} onClick={() => navigate(p)}
-                style={{ padding:"10px 11px", color:page===p?"#00C8F0":"#8A9BBD", fontWeight:page===p?600:400, fontSize:14, cursor:"pointer", borderRadius:7, transition:"background 0.12s" }}
-                onMouseEnter={e=>e.currentTarget.style.background="rgba(0,128,238,0.07)"}
+                style={{ padding:"10px 11px", color:page===p?"#22D3EE":"#9CA3AF", fontWeight:page===p?600:400, fontSize:14, cursor:"pointer", borderRadius:7, transition:"background 0.12s" }}
+                onMouseEnter={e=>e.currentTarget.style.background="rgba(37,99,235,0.07)"}
                 onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{l}</div>
             ))}
-            <div style={{ borderTop:"1px solid #141928", paddingTop:10, marginTop:6, display:"flex", flexWrap:"wrap", gap:6 }}>
+            <div style={{ borderTop:"1px solid #1F2937", paddingTop:10, marginTop:6, display:"flex", flexWrap:"wrap", gap:6 }}>
               {CATEGORIES.map(c => (
                 <button key={c.id} onClick={() => navigate("category",{cat:c.id})}
-                  style={{ background:"#0B0F1E", border:`1px solid #141928`, color:"#8A9BBD", borderRadius:7, padding:"5px 10px", fontSize:11, cursor:"pointer" }}>
+                  style={{ background:"#111827", border:`1px solid #1F2937`, color:"#9CA3AF", borderRadius:7, padding:"5px 10px", fontSize:11, cursor:"pointer" }}>
                   {c.icon} {c.name}
                 </button>
               ))}
@@ -2081,42 +2293,44 @@ export default function App() {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background:"#030509", borderTop:"1px solid rgba(0,128,238,0.09)", padding:"52px 0 26px", width:"100%" }}>
+      <footer style={{ background:"#060A14", borderTop:"1px solid rgba(37,99,235,0.09)", padding:"52px 0 26px", width:"100%" }}>
         <div style={{ width:"100%", padding:"0 clamp(14px,3.5vw,56px)" }}>
           <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:44, marginBottom:44 }} className="grid-mobile-1">
             <div>
               <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:14 }}>
-                <div style={{ width:34, height:34, background:"linear-gradient(135deg,#0080EE,#6457FF)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>⚡</div>
-                <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:20 }}><span className="gradient-text">Electronic</span> <span style={{ color:"#E2ECFF" }}>Store</span></span>
+                <div style={{ width:34, height:34, background:"linear-gradient(135deg,#2563EB,#2563EB)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 3px 10px rgba(37,99,235,0.35)" }}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff" stroke="#fff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <span style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:19 }}><span className="gradient-text">Electronic</span> <span style={{ color:"#F0F4FF" }}>Store</span></span>
               </div>
-              <p style={{ fontSize:13, color:"#4E5F7A", lineHeight:1.75, maxWidth:300, marginBottom:20 }}>Karnataka's most trusted electronics destination. Premium quality, best prices, authorized dealership for all major brands.</p>
+              <p style={{ fontSize:13, color:"#6B7280", lineHeight:1.75, maxWidth:300, marginBottom:20 }}>Karnataka's most trusted electronics destination. Premium quality, best prices, authorized dealership for all major brands.</p>
               <div style={{ display:"flex", gap:9 }}>
                 {[["📸","Instagram"],["📘","Facebook"],["🐦","Twitter"],["▶️","YouTube"]].map(([icon,name]) => (
-                  <div key={name} title={name} style={{ width:38, height:38, background:"rgba(0,128,238,0.07)", border:"1px solid rgba(0,200,240,0.13)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:15, transition:"all 0.22s" }}
-                    onMouseEnter={e=>{e.currentTarget.style.background="rgba(0,128,238,0.18)"; e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.35)";}}
-                    onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,128,238,0.07)"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.borderColor="rgba(0,200,240,0.13)";}}>
+                  <div key={name} title={name} style={{ width:38, height:38, background:"rgba(37,99,235,0.07)", border:"1px solid rgba(37,99,235,0.15)", borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:15, transition:"all 0.22s" }}
+                    onMouseEnter={e=>{e.currentTarget.style.background="rgba(37,99,235,0.18)"; e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.borderColor="rgba(37,99,235,0.4)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.background="rgba(37,99,235,0.07)"; e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.borderColor="rgba(37,99,235,0.15)";}}>
                     {icon}
                   </div>
                 ))}
               </div>
             </div>
             <div>
-              <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, marginBottom:16, color:"#C0D0E8" }}>Contact Us</p>
+              <p style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, marginBottom:16, color:"#D0DFF0" }}>Contact Us</p>
               {[["📍","Sirsi, Uttara Kannada, Karnataka 581355"],["📞","111 1234 5555"],["✉️","electronicstore@gmail.com"],["🕐","Mon–Sat: 9AM – 7PM"]].map(([ic,val]) => (
                 <div key={val} style={{ display:"flex", gap:9, marginBottom:10, alignItems:"flex-start" }}>
                   <span style={{ fontSize:13, marginTop:1 }}>{ic}</span>
-                  <span style={{ fontSize:12, color:"#4E5F7A", lineHeight:1.5 }}>{val}</span>
+                  <span style={{ fontSize:12, color:"#6B7280", lineHeight:1.5 }}>{val}</span>
                 </div>
               ))}
             </div>
             <div>
-              <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:14, marginBottom:16, color:"#C0D0E8" }}>Quick Feedback</p>
-              <p style={{ fontSize:12, color:"#4E5F7A", marginBottom:12, lineHeight:1.6 }}>Share your experience with us</p>
-              <textarea style={{ background:"rgba(8,12,24,0.95)", border:"1.5px solid #1A2440", color:"#E2ECFF", padding:"9px 12px", borderRadius:9, fontSize:12, width:"100%", resize:"vertical", outline:"none", marginBottom:9, minHeight:72, fontFamily:"'DM Sans',sans-serif" }} placeholder="Your feedback…" />
+              <p style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, marginBottom:16, color:"#D0DFF0" }}>Quick Feedback</p>
+              <p style={{ fontSize:12, color:"#6B7280", marginBottom:12, lineHeight:1.6 }}>Share your experience with us</p>
+              <textarea style={{ background:"rgba(8,12,24,0.95)", border:"1.5px solid #1A2440", color:"#F0F4FF", padding:"9px 12px", borderRadius:9, fontSize:12, width:"100%", resize:"vertical", outline:"none", marginBottom:9, minHeight:72, fontFamily:"'Inter',sans-serif" }} placeholder="Your feedback…" />
               <button className="btn-primary" style={{ width:"100%", padding:10, fontSize:12 }}>Submit Feedback</button>
             </div>
           </div>
-          <div style={{ borderTop:"1px solid rgba(0,128,238,0.07)", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:9 }}>
+          <div style={{ borderTop:"1px solid rgba(37,99,235,0.07)", paddingTop:22, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:9 }}>
             <p style={{ fontSize:11, color:"#3A5070" }}>© 2025 Electronic Store, Sirsi. All rights reserved.</p>
             <p style={{ fontSize:11, color:"#3A5070" }}>Made with ❤️ in Karnataka, India</p>
           </div>
@@ -2129,7 +2343,7 @@ export default function App() {
       {/* Chatbot toggle */}
       {page === "home" && (
         <button onClick={() => setChatOpen(!chatOpen)}
-          style={{ position:"fixed", bottom:chatOpen?488:26, right:78, zIndex:1500, width:52, height:52, background:"linear-gradient(135deg,#0080EE,#6457FF)", border:"none", borderRadius:"50%", fontSize:20, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 24px rgba(0,128,238,0.5)", transition:"bottom 0.3s cubic-bezier(0.22,1,0.36,1)", cursor:"pointer", animation:"glowPulse 2.5s ease-in-out infinite" }}>
+          style={{ position:"fixed", bottom:chatOpen?488:26, right:78, zIndex:1500, width:52, height:52, background:"linear-gradient(135deg,#2563EB,#8B5CF6)", border:"none", borderRadius:"50%", fontSize:20, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 24px rgba(37,99,235,0.5)", transition:"bottom 0.3s cubic-bezier(0.22,1,0.36,1)", cursor:"pointer", animation:"glowPulse 2.5s ease-in-out infinite" }}>
           {chatOpen ? "✕" : "🤖"}
         </button>
       )}
